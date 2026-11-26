@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <title>엑셀 접수 폼 열기</title>
+</head>
+<body>
+  <form method="post" action="http://127.0.0.1:5001/login/crm">
+    <input type="hidden" name="ticket" value="{{ ticket }}">
+    <button type="submit">엑셀 접수 폼 계속 열기</button>
+  </form>
+  <script>window.opener = null; document.forms[0].submit();</script>
+</body>
+</html>

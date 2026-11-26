@@ -1,5 +1,6 @@
 """Customer self-service and assigned report review."""
 
+import os
 import re
 import secrets
 import sqlite3
@@ -16,6 +17,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from rpa.orchestrator_client import OrchestratorError
 from services import automation_service as automation, orchestrator_service
 from services.auth import _connect, _revoke_session, _session_hash, _verify_csrf, csrf_token, local_enabled
+from services.excel_signin import login_tickets
 from services.incident_service import IncidentValidationError, RISK_LEVELS
 
 customer = Blueprint("customer", __name__, url_prefix="/customer")
@@ -361,40 +363,40 @@ def review(report_id):
             "SELECT username FROM auth_users WHERE role='AGENT' AND active=1 ORDER BY username",
         ).fetchall() if admin else []
         events = _events(conn, report_id)
+        receipt = conn.execute(
+            """SELECT i.incident_id, i.created_at, c.name
+               FROM incidents i JOIN customers c USING(customer_id) WHERE i.request_id=?""",
+            (row["request_id"],),
+        ).fetchone()
     return _page("고객 신고 검토", view="detail", row=row, events=events, staff_view=True,
                  snapshot=snapshot, can_review=not admin and row["assigned_to"] == actor,
                  can_approve=not admin and row["status"] == automation.Status.PENDING_APPROVAL,
                  staff_choices=staff_choices, categories=_settings()["categories"], risks=RISK_LEVELS,
-                 actions=_settings()["actions"],
-                 excel_enabled=bool(_settings()["excel_url"]()) and bool(row["job_key"]))
+                 actions=_settings()["actions"], receipt=receipt)
 
 
-@staff.get("/<report_id>/excel-ready")
-def excel_ready(report_id):
-    actor = _employee("AGENT", "ADMIN")
+@staff.get("/receipt/<incident_id>")
+def receipt_detail(incident_id):
+    _employee("AGENT", "ADMIN")
     with closing(_connect()) as conn:
-        row = _find(conn, report_id)
-        if g.local_user["role"] != "ADMIN" and row["assigned_to"] != actor:
-            abort(403)
-    handoff = _settings()["excel_ready"](row["request_id"]) if row["job_key"] else None
-    return handoff or {"url": None}, 200, {"Cache-Control": "no-store"}
+        report = conn.execute(
+            "SELECT r.report_id FROM customer_reports r JOIN incidents i USING(request_id) WHERE i.incident_id=?",
+            (incident_id,),
+        ).fetchone()
+    if report is None:
+        abort(404)
+    return review(report["report_id"])
 
 
-@staff.post("/<report_id>/prepare-excel")
-def prepare_excel(report_id):
-    actor = _employee("AGENT")
-    with closing(_connect()) as conn:
-        row = _assigned(conn, report_id, actor)
-        snapshot = automation.get_request(conn, row["request_id"])
-        receipt = orchestrator_service.confirmed_receipt(conn, snapshot)
-    if row["job_state"] != "Successful" or row["error_message"] != "CRM_REJECTED" or not receipt:
-        abort(409)
+@staff.post("/excel/open")
+def open_excel():
+    _employee("AGENT", "ADMIN")
     try:
-        _settings()["prepare_excel"](snapshot, receipt["incident_id"])
-    except OrchestratorError as exc:
-        flash(str(exc), "error")
-        return redirect(url_for("report_staff.review", report_id=report_id), code=303)
-    return redirect(url_for("report_staff.review", report_id=report_id, open_excel=1), code=303)
+        tickets = login_tickets(os.getenv("FINGUARD_EXCEL_INTAKE_TOKEN", ""))
+    except ValueError as error:
+        abort(503, str(error))
+    ticket = tickets.dumps(secrets.token_urlsafe(32))
+    return render_template("portal/excel_signin.html", ticket=ticket), 200, {"Cache-Control": "no-store"}
 
 
 @staff.post("/<report_id>/assign")
@@ -466,8 +468,7 @@ def decide_report(report_id, action):
             abort(400, str(exc))
         if approved and snapshot["dispatch_pending"]:
             _run_action(conn, row, actor, orchestrator_service.dispatch)
-    return redirect(url_for("report_staff.review", report_id=report_id,
-                            open_excel=1 if approved else None), code=303)
+    return redirect(url_for("report_staff.review", report_id=report_id), code=303)
 
 
 def _run_action(conn, row, actor, operation):
@@ -487,8 +488,7 @@ def execute_report(report_id, action):
         row = _assigned(conn, report_id, actor)
         _run_action(conn, row, actor,
                     orchestrator_service.dispatch if action == "dispatch" else orchestrator_service.refresh)
-    return redirect(url_for("report_staff.review", report_id=report_id,
-                            open_excel=1 if action == "dispatch" else None), code=303)
+    return redirect(url_for("report_staff.review", report_id=report_id), code=303)
 
 
 @staff.get("/dashboard")
@@ -509,7 +509,7 @@ def admin_history(section):
     _employee("ADMIN")
     page = max(1, min(request.args.get("page", 1, type=int), 100000))
     if section == "consultations":
-        headings = ("상담 ID", "고객 ID", "상담 내용", "AI 요약", "등록 시각 (한국 시간)")
+        headings = ("상담 ID", "고객 ID", "상담 내용", "AI 요약", "등록 시각")
         sql = ("SELECT consultation_id,customer_id,conversation,ai_summary,created_at "
                "FROM consultations ORDER BY created_at DESC,consultation_id")
     else:

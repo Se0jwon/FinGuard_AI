@@ -1,125 +1,154 @@
-import io
+﻿import io
 import re
+from concurrent.futures import ThreadPoolExecutor
 from uuid import uuid4
 
-import httpx
-from openpyxl import load_workbook
+from openpyxl import Workbook, load_workbook
 
-import app as web
-from excel_intake import create_app
-from test_customer_portal import approve, customer, employee, submit, QUEUE
+from excel_intake import FIELDS, create_app, normalize, save_row
+from test_customer_portal import QUEUE, approve, customer, employee, submit
 from test_local_auth import demo
 from test_orchestrator import inputs, orchestrator, robot
 
 TOKEN = "fixture-excel-intake-token-for-testing"
 
 
-def site(tmp_path):
-    app = create_app(token=TOKEN, workbook_path=tmp_path / "receipts.xlsx")
-    app.testing = True
-    return app.test_client()
-
-
 def csrf(client, path):
     return re.search(r'name="csrf" value="([^"]+)"', client.get(path).text)[1]
 
 
-def sign_in(client):
-    assert client.post("/login", data={"password": TOKEN, "csrf": csrf(client, "/login")}).status_code == 303
+def payload():
+    return {
+        "customer-name": "테스트 고객", "report-id": f"RPT-{uuid4().hex}",
+        "incident-id": "INC-20261126-424550", "damage-type": "보이스피싱",
+        "damage-amount": "5000000", "occurred-at": "미입력", "conversation": "=2+3",
+        "ai-summary": "피해 신고 요약", "fds-risk": "미분석", "assigned-agent": "agent1",
+        "received-at": "2026-11-26 10:00:00",
+    }
 
 
-def submit_api(client, payload):
-    return client.post("/api/drafts", json=payload, headers={"Authorization": f"Bearer {TOKEN}"})
-
-
-def test_workbook_login_form_charts_and_literal_text(tmp_path):
-    client = site(tmp_path)
+def test_excel_starts_empty_and_saves_ui_submission(tmp_path):
+    path = tmp_path / "receipts.xlsx"
+    client = create_app(token=TOKEN, workbook_path=path).test_client()
     assert client.get("/records.xlsx").status_code == 302
-    assert client.post("/api/drafts", json={}).status_code == 401
-    sign_in(client)
-    assert "아직 등록된 접수가 없습니다" in client.get("/records").text
+    assert client.post("/api/drafts", json=payload()).status_code == 404
+    assert client.post("/login", data={"password": TOKEN, "csrf": csrf(client, "/login")}).status_code == 303
     form = client.get("/").text
-    key = re.search(r'name="request_id" value="([^"]+)"', form)[1]
-    payload = {"request_id": key, "category": "LOST_CARD", "summary": "=2+3"}
-    assert client.post("/", data=payload).status_code == 403
-    assert client.post("/", data={**payload, "csrf": csrf(client, "/")}).status_code == 303
-    api_payload = {"request_id": f"AUTO-{uuid4().hex}", "incident_id": "INC-20261125-424550",
-                   "category": "LOST_CARD", "summary": "테스트 접수", "risk_level": "HIGH"}
-    assert submit_api(client, api_payload).status_code == 201
-    assert submit_api(client, api_payload).json["status"] == "DUPLICATE"
-    assert submit_api(client, {**api_payload, "summary": "다른 내용"}).status_code == 409
-    draft = "/drafts/" + api_payload["request_id"]
-    assert api_payload["request_id"] in client.get("/").text
-    assert api_payload["summary"] in client.get(draft).text
-    assert api_payload["summary"] not in client.get("/records").text
-    assert client.post(draft).status_code == 403
-    confirmation = {"csrf": csrf(client, draft), "summary": "변조 시도"}
-    assert client.post(draft, data=confirmation).status_code == 303
-    assert client.post(draft, data=confirmation).status_code == 303
-    assert submit_api(client, api_payload).json["status"] == "DUPLICATE"
-    assert api_payload["request_id"] not in client.get("/").text
-    records = client.get("/records").text
-    assert "2건 · 100.0%" in records and "conic-gradient(" in records
+    for key, _, _ in FIELDS:
+        assert f'id="excel-{key}"' in form
+    assert "테스트 고객" not in form and "INC-20261126-424550" not in form
+    assert not path.exists()
+    data = payload()
+    assert client.post("/", data=data).status_code == 403
+    data["csrf"] = csrf(client, "/")
+    first = client.post("/", data=data, follow_redirects=True)
+    assert 'id="excel-save-success"' in first.text
+    assert "<table>" in first.text and "conic-gradient(" not in first.text
+    assert data["incident-id"] in first.text
+    assert client.post("/", data=data, follow_redirects=True).status_code == 200
+    assert client.post("/", data={**data, "conversation": "다른 내용"}).status_code == 409
     download = client.get("/records.xlsx")
+    assert download.status_code == 200 and "attachment" in download.headers["Content-Disposition"]
     workbook = load_workbook(io.BytesIO(download.data))
     try:
         sheet = workbook["접수 목록"]
-        assert sheet.max_row == 3
+        assert sheet.max_row == 2
         assert sheet["F2"].value == "=2+3" and sheet["F2"].data_type == "s"
-        assert sheet["F3"].value == api_payload["summary"]
+        assert sheet["G2"].value == data["customer-name"]
     finally:
         workbook.close()
 
 
-def test_staff_approval_robot_prefills_approved_snapshot_for_explicit_save(demo, orchestrator, monkeypatch, tmp_path):
-    client = site(tmp_path)
-    monkeypatch.setenv("FINGUARD_EXCEL_INTAKE_URL", "http://127.0.0.1:5001")
-    monkeypatch.setenv("FINGUARD_EXCEL_INTAKE_TOKEN", TOKEN)
-    delivered = []
+def test_workbook_preserves_legacy_rows_and_serializes_duplicate_writes(tmp_path):
+    path = tmp_path / "receipts.xlsx"
+    workbook = Workbook()
+    sheet = workbook.active
+    sheet.title = "접수 목록"
+    sheet.append(("저장 시각 (한국 시간)", "요청 ID", "사고 접수번호", "분류", "위험도", "상담 내용"))
+    sheet.append(("2026-11-25 12:00:00", "legacy", "INC-20261125-123ABC", "기존 분류", "", "기존 상담"))
+    workbook.save(path)
+    workbook.close()
 
-    def forward(url, *, headers, json, **kwargs):
-        assert url.endswith("/api/drafts")
-        result = client.post("/api/drafts", headers=headers, json=json)
-        delivered.append(json)
-        return httpx.Response(result.status_code, json=result.json,
-                              request=httpx.Request("POST", url))
+    client = create_app(token=TOKEN, workbook_path=path).test_client()
+    assert client.post("/login", data={"password": TOKEN, "csrf": csrf(client, "/login")}).status_code == 303
+    downloaded = load_workbook(io.BytesIO(client.get("/records.xlsx").data))
+    try:
+        assert downloaded.active["A1"].value == "저장 시각"
+        assert downloaded.active["C2"].value == "INC-20261125-123ABC"
+    finally:
+        downloaded.close()
 
-    monkeypatch.setattr(web.httpx, "post", forward)
-    def check_ready(url, *, headers, **kwargs):
-        result = client.get(url.removeprefix("http://127.0.0.1:5001"), headers=headers)
-        return httpx.Response(result.status_code, json=result.json)
+    old = normalize({**payload(), "incident-id": "INC-20261125-123ABC"})
+    assert save_row(path, old) is False
+    new = normalize(payload())
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        assert sorted(executor.map(lambda _: save_row(path, new), range(2))) == [False, True]
+    workbook = load_workbook(path)
+    try:
+        assert workbook.active.max_row == 3
+        assert workbook.active["F2"].value == "기존 상담"
+        assert workbook.active["G3"].value == "테스트 고객"
+    finally:
+        workbook.close()
 
-    monkeypatch.setattr(web.httpx, "get", check_ready)
+
+def test_staff_can_read_confirmed_receipt_without_excel_handoff(demo, orchestrator, monkeypatch):
+    monkeypatch.setenv("FINGUARD_EXCEL_INTAKE_URL", "http://127.0.0.1:1")
     owner = customer("excel-test")
     report_path, _ = submit(owner)
     staff_path = QUEUE + "/" + report_path.rsplit("/", 1)[-1]
     agent = employee()
-    approval = approve(agent, staff_path)
-    assert approval.status_code == 303
-    assert "data-excel-ready" in agent.get(approval.location).text
-    assert agent.get(staff_path + "/excel-ready").json == {"url": None}
-    assert delivered == []
+    assert approve(agent, staff_path).status_code == 303
+    assert 'id="crm-receipt"' not in agent.get(staff_path).text
     args = inputs(orchestrator)
     receipt = robot(owner, args["in_RequestId"], args["in_DispatchId"])
     assert receipt.status_code == 201
     assert robot(owner, args["in_RequestId"], args["in_DispatchId"]).status_code == 200
-    assert delivered[0] == delivered[1]
-    assert delivered[0]["incident_id"] == receipt.json["incident_id"]
-    assert "customer_id" not in delivered[0] and "dispatch_id" not in delivered[0]
-    assert not (tmp_path / "receipts.xlsx").exists()
-    draft = "/drafts/" + args["in_RequestId"]
-    handoff = agent.get(staff_path + "/excel-ready").json
-    assert handoff["url"] == "http://127.0.0.1:5001/drafts/open"
-    assert client.get(draft).status_code == 302
-    assert client.post("/drafts/open", data={"ticket": "invalid"}).status_code == 403
-    assert client.post("/drafts/open", data={"ticket": handoff["ticket"]}).location == draft
-    assert client.post("/drafts/open", data={"ticket": handoff["ticket"]}).status_code == 403
-    assert client.get("/records").status_code == 302
-    assert receipt.json["incident_id"] in client.get(draft).text
-    assert client.post(draft, data={"csrf": csrf(client, draft)}).status_code == 303
-    assert "엑셀에 저장했습니다" in client.get(draft).text
-    workbook = load_workbook(tmp_path / "receipts.xlsx")
-    try:
-        assert workbook.active.max_row == 2
-    finally:
-        workbook.close()
+    receipt_path = f"{QUEUE}/receipt/{receipt.json['incident_id']}"
+    assert owner.get(receipt_path).status_code in (302, 403)
+    detail = agent.get(receipt_path)
+    assert detail.status_code == 200
+    for key, _, _ in FIELDS:
+        assert f'id="crm-{key}"' in detail.text
+    assert receipt.json["incident_id"] in detail.text
+    assert 'id="open-excel-form"' in detail.text
+    assert 'action="/consultation/customer-reports/excel/open"' in detail.text
+    assert 'excel-popup.js' in detail.text
+    assert "기업 내부 사이트" in detail.text
+    assert "한국 시간" not in detail.text
+    assert agent.get(staff_path + "/excel-ready").status_code == 404
+
+
+def test_staff_can_open_empty_excel_form_without_entering_token(demo, monkeypatch, tmp_path):
+    monkeypatch.setenv("FINGUARD_EXCEL_INTAKE_TOKEN", TOKEN)
+    agent = employee()
+    path = QUEUE + "/excel/open"
+    assert agent.post(path).status_code == 403
+    assert customer("excel-outsider").post(path).status_code in (302, 403)
+    token = re.search(r'name="csrf_token" value="([^"]+)"', agent.get(QUEUE).text)[1]
+    handoff = agent.post(path, data={"csrf_token": token})
+    assert handoff.status_code == 200
+    assert handoff.headers["Cache-Control"] == "no-store"
+    assert TOKEN not in handoff.text
+    assert 'action="http://127.0.0.1:5001/login/crm"' in handoff.text
+    ticket = re.search(r'name="ticket" value="([^"]+)"', handoff.text)[1]
+
+    workbook = tmp_path / "receipts.xlsx"
+    excel = create_app(token=TOKEN, workbook_path=workbook).test_client()
+    assert excel.post("/login/crm", data={"ticket": "invalid"}).status_code == 403
+    form = excel.post("/login/crm", data={"ticket": ticket}, follow_redirects=True)
+    assert form.status_code == 200
+    assert 'id="excel-intake-form"' in form.text
+    assert "기업 외부 사이트" in form.text
+    assert "한국 시간" not in form.text
+    assert 'id="excel-customer-name" name="customer-name" maxlength="200" value=""' in form.text
+    assert not workbook.exists()
+    assert excel.get("/records").status_code == 200
+    assert excel.post("/login/crm", data={"ticket": ticket}).status_code == 403
+
+    # Reopening Excel from CRM must not invalidate a form in another popup.
+    first_csrf = re.search(r'name="csrf" value="([^"]+)"', form.text)[1]
+    second_handoff = agent.post(path, data={"csrf_token": token})
+    second_ticket = re.search(r'name="ticket" value="([^"]+)"', second_handoff.text)[1]
+    assert excel.post("/login/crm", data={"ticket": second_ticket}, follow_redirects=True).status_code == 200
+    assert excel.post("/", data={**payload(), "csrf": first_csrf}).status_code == 303

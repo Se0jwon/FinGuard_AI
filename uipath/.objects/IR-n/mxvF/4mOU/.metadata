@@ -1,0 +1,13 @@
+﻿{
+  "Name": "Excel Records Result",
+  "Type": "Screen",
+  "Id": "4mOUS3liiESa6oj0wjM1UA",
+  "Reference": "F9ggLvmvHkGBkDPI03Dc3Q/4mOUS3liiESa6oj0wjM1UA",
+  "ParentRef": "F9ggLvmvHkGBkDPI03Dc3Q/mxvFYddxQE2v7x-3BdT8WQ",
+  "Created": "2026-11-26T03:44:33.3755415Z",
+  "Updated": "2026-11-26T03:44:33.3755415Z",
+  "CreatedBy": [
+    "UiPath.UIAutomationCore, Version=26.10.7.0, Culture=neutral, PublicKeyToken=null",
+    "UiPath.Platform, Version=26.4.0.0, Culture=neutral, PublicKeyToken=null"
+  ]
+}

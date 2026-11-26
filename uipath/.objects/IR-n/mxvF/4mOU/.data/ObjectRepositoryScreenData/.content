@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-16"?>
+<ObjectRepositoryScreenData ContentHash="d5kKnIgBUkSpmZSJvhtWkQ" xmlns="http://schemas.uipath.com/workflow/activities/uix" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <ObjectRepositoryScreenData.Data>
+    <TargetApp x:Key="TargetApp" Area="0, 0, 1136, 923" BrowserType="Chrome" Selector="&lt;html app='chrome.exe' htmlwindowname='finguardExcel*' title='FinGuard 엑셀 접수' url='http://127.0.0.1:5001/*' /&gt;" Url="http://127.0.0.1:5001/records" Version="V3">
+      <TargetApp.SapInfo>
+        <SAPElementInfo IsSapSubsystem="False" WebAutomationFramework="Default" />
+      </TargetApp.SapInfo>
+      <imageRef attrName="InformativeScreenshot" originalValue="b35da6c5e9f0ad855ac3aac5d29f6eb1.jpg" xmlns="">0J-fWGhTI0kOgwzZoMRIs9Q</imageRef>
+    </TargetApp>
+    <NInteractionMode x:Key="InteractionMode">DebuggerApi</NInteractionMode>
+  </ObjectRepositoryScreenData.Data>
+</ObjectRepositoryScreenData>

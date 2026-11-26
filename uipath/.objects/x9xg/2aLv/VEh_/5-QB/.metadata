@@ -1,0 +1,15 @@
+﻿{
+  "Name": "CRM popup",
+  "Description": "CRM receipt popup",
+  "Type": "Element",
+  "TaxonomyType": "Button",
+  "Id": "5-QBefPEkEC9g4cozLQCXw",
+  "Reference": "F9ggLvmvHkGBkDPI03Dc3Q/5-QBefPEkEC9g4cozLQCXw",
+  "ParentRef": "F9ggLvmvHkGBkDPI03Dc3Q/VEh_ECPHIkG02u2guJkbwQ",
+  "Created": "2026-11-26T03:28:20.279863Z",
+  "Updated": "2026-11-26T03:28:20.279863Z",
+  "CreatedBy": [
+    "UiPath.UIAutomationCore, Version=26.10.7.0, Culture=neutral, PublicKeyToken=null",
+    "UiPath.Platform, Version=26.4.0.0, Culture=neutral, PublicKeyToken=null"
+  ]
+}

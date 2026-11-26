@@ -1,0 +1,15 @@
+﻿{
+  "Name": "CRM received-at",
+  "Description": "CRM receipt received-at",
+  "Type": "Element",
+  "TaxonomyType": "Label",
+  "Id": "WV-aG64CZkKcOLTbtyYkPg",
+  "Reference": "F9ggLvmvHkGBkDPI03Dc3Q/WV-aG64CZkKcOLTbtyYkPg",
+  "ParentRef": "F9ggLvmvHkGBkDPI03Dc3Q/VEh_ECPHIkG02u2guJkbwQ",
+  "Created": "2026-11-26T03:28:20.2529067Z",
+  "Updated": "2026-11-26T03:28:20.2529067Z",
+  "CreatedBy": [
+    "UiPath.UIAutomationCore, Version=26.10.7.0, Culture=neutral, PublicKeyToken=null",
+    "UiPath.Platform, Version=26.4.0.0, Culture=neutral, PublicKeyToken=null"
+  ]
+}

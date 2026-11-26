@@ -1,0 +1,15 @@
+﻿{
+  "Name": "Excel received-at",
+  "Description": "FinGuard Excel received-at",
+  "Type": "Element",
+  "TaxonomyType": "Input",
+  "Id": "Jy_3cKJtK0ynOE5V8yvX0Q",
+  "Reference": "F9ggLvmvHkGBkDPI03Dc3Q/Jy_3cKJtK0ynOE5V8yvX0Q",
+  "ParentRef": "F9ggLvmvHkGBkDPI03Dc3Q/odZxPJWIckaisgJ8eFF3dw",
+  "Created": "2026-11-26T03:27:11.1082817Z",
+  "Updated": "2026-11-26T03:27:11.1082817Z",
+  "CreatedBy": [
+    "UiPath.UIAutomationCore, Version=26.10.7.0, Culture=neutral, PublicKeyToken=null",
+    "UiPath.Platform, Version=26.4.0.0, Culture=neutral, PublicKeyToken=null"
+  ]
+}

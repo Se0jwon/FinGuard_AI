@@ -7,7 +7,6 @@ from contextlib import closing
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from uuid import uuid4
-from urllib.parse import urlsplit
 
 import httpx
 from flask import Flask, abort, g, jsonify, redirect, render_template, request, url_for
@@ -613,7 +612,6 @@ def _execute_automation(conn, request_id, actor, action, *, guard=None):
         robot_token = os.getenv("FINGUARD_ROBOT_TOKEN", "")
         if len(robot_token) < 32 or not robot_token.isascii():
             raise RobotConfigurationError("로봇 접수 토큰 설정을 확인하세요.")
-        _excel_intake_settings()
     else:
         if not orchestrator_service.execution(conn, request_id):
             raise AutomationConflict("조회할 Orchestrator 실행이 없습니다.")
@@ -662,89 +660,14 @@ def automation_robot_receipt(request_id):
     if not isinstance(dispatch_id, str) or not re.fullmatch(r"[0-9a-f]{32}", dispatch_id):
         return jsonify({"error": "실행 식별자를 확인하세요."}), 400
     try:
-        excel = _excel_intake_settings()
         with closing(get_db_connection()) as conn:
             incident_id, duplicate = orchestrator_service.submit_receipt(
                 conn, request_id, dispatch_id, CATEGORY_LABELS,
             )
-            if excel:
-                snapshot = automation_service.get_request(conn, request_id)
     except IncidentValidationError as exc:
         raise AutomationConflict(str(exc)) from None
-    if excel:
-        _prepare_excel_intake(excel, snapshot, incident_id)
     return jsonify(request_id=request_id, incident_id=incident_id,
                    status="DUPLICATE" if duplicate else "SUCCESS"), 200 if duplicate else 201
-
-
-def _excel_intake_settings():
-    url = os.getenv("FINGUARD_EXCEL_INTAKE_URL", "").rstrip("/")
-    if not url:
-        return None
-    token = os.getenv("FINGUARD_EXCEL_INTAKE_TOKEN", "")
-    try:
-        parts = urlsplit(url)
-        valid_origin = (parts.scheme == "https" and parts.hostname) or (
-            parts.scheme == "http" and parts.hostname in ("localhost", "127.0.0.1", "::1")
-        )
-        if (valid_origin and parts.username is None and not parts.query and not parts.fragment
-                and not parts.path and len(token) >= 32 and token.isascii()):
-            return url, token
-    except ValueError:
-        pass
-    raise RobotConfigurationError("엑셀 접수 사이트 URL과 토큰을 확인하세요.")
-
-
-def _prepare_excel_intake(settings, snapshot, incident_id):
-    url, token = settings
-    request_id = snapshot["request_id"]
-    try:
-        response = httpx.post(
-            f"{url}/api/drafts",
-            headers={"Authorization": f"Bearer {token}"},
-            json={
-                "request_id": request_id, "incident_id": incident_id,
-                "category": snapshot["incident_category"],
-                "risk_level": snapshot["incident_risk_level"] or "",
-                "summary": snapshot["incident_summary"],
-            },
-            timeout=4, follow_redirects=False, trust_env=False,
-        )
-        response.raise_for_status()
-        if response.json() not in (
-            {"request_id": request_id, "status": "PENDING_SAVE"},
-            {"request_id": request_id, "status": "DUPLICATE"},
-        ):
-            raise ValueError
-    except (httpx.HTTPError, ValueError):
-        app.logger.warning("로봇의 엑셀 접수 확인 실패 request_id=%s", request_id)
-        raise OrchestratorError("CRM에는 접수됐지만 엑셀 접수 폼을 준비하지 못했습니다.") from None
-
-
-def _excel_draft_url(request_id):
-    try:
-        settings = _excel_intake_settings()
-        if settings:
-            url, token = settings
-            response = httpx.get(
-                f"{url}/api/drafts/{request_id}",
-                headers={"Authorization": f"Bearer {token}"},
-                timeout=2, follow_redirects=False, trust_env=False,
-            )
-            if response.status_code == 200:
-                ticket = response.json().get("ticket")
-                if isinstance(ticket, str) and ticket:
-                    return {"url": f"{url}/drafts/open", "ticket": ticket}
-    except (httpx.HTTPError, RobotConfigurationError, ValueError):
-        pass
-    return None
-
-
-def _recover_excel_draft(snapshot, incident_id):
-    settings = _excel_intake_settings()
-    if not settings:
-        raise RobotConfigurationError("엑셀 접수 사이트 URL을 설정해 주세요.")
-    _prepare_excel_intake(settings, snapshot, incident_id)
 
 
 # ==========================================
@@ -754,8 +677,7 @@ def _recover_excel_draft(snapshot, incident_id):
 configure_portal(app, limiter, analyze=_analyze_for_review,
                  fds=lambda customer_id: analyze_customer(customer_id, db_path=DB_PATH),
                  execute=_execute_automation, discover=_discover_process, categories=CATEGORY_LABELS,
-                 actions=ACTION_LABELS, excel_ready=_excel_draft_url, prepare_excel=_recover_excel_draft,
-                 excel_url=lambda: os.getenv("FINGUARD_EXCEL_INTAKE_URL", ""))
+                 actions=ACTION_LABELS)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,15 @@
+﻿{
+  "Name": "CRM assigned-agent",
+  "Description": "CRM receipt assigned-agent",
+  "Type": "Element",
+  "TaxonomyType": "Label",
+  "Id": "9sMqhrhZgUiHEturLod88A",
+  "Reference": "F9ggLvmvHkGBkDPI03Dc3Q/9sMqhrhZgUiHEturLod88A",
+  "ParentRef": "F9ggLvmvHkGBkDPI03Dc3Q/VEh_ECPHIkG02u2guJkbwQ",
+  "Created": "2026-11-26T03:28:20.2119145Z",
+  "Updated": "2026-11-26T03:28:20.2119145Z",
+  "CreatedBy": [
+    "UiPath.UIAutomationCore, Version=26.10.7.0, Culture=neutral, PublicKeyToken=null",
+    "UiPath.Platform, Version=26.4.0.0, Culture=neutral, PublicKeyToken=null"
+  ]
+}

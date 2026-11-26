@@ -1,0 +1,15 @@
+﻿{
+  "Name": "Excel occurred-at",
+  "Description": "FinGuard Excel occurred-at",
+  "Type": "Element",
+  "TaxonomyType": "Input",
+  "Id": "J268qPy06Emm0g43yP7_cQ",
+  "Reference": "F9ggLvmvHkGBkDPI03Dc3Q/J268qPy06Emm0g43yP7_cQ",
+  "ParentRef": "F9ggLvmvHkGBkDPI03Dc3Q/odZxPJWIckaisgJ8eFF3dw",
+  "Created": "2026-11-26T03:31:08.418274Z",
+  "Updated": "2026-11-26T03:31:08.418274Z",
+  "CreatedBy": [
+    "UiPath.UIAutomationCore, Version=26.10.7.0, Culture=neutral, PublicKeyToken=null",
+    "UiPath.Platform, Version=26.4.0.0, Culture=neutral, PublicKeyToken=null"
+  ]
+}

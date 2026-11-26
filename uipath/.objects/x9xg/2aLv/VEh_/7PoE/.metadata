@@ -1,0 +1,15 @@
+﻿{
+  "Name": "CRM ai-summary",
+  "Description": "CRM receipt ai-summary",
+  "Type": "Element",
+  "TaxonomyType": "Label",
+  "Id": "7PoEQiV74kuZ8tFuoI_IMQ",
+  "Reference": "F9ggLvmvHkGBkDPI03Dc3Q/7PoEQiV74kuZ8tFuoI_IMQ",
+  "ParentRef": "F9ggLvmvHkGBkDPI03Dc3Q/VEh_ECPHIkG02u2guJkbwQ",
+  "Created": "2026-11-26T03:28:20.1446401Z",
+  "Updated": "2026-11-26T03:28:20.1446401Z",
+  "CreatedBy": [
+    "UiPath.UIAutomationCore, Version=26.10.7.0, Culture=neutral, PublicKeyToken=null",
+    "UiPath.Platform, Version=26.4.0.0, Culture=neutral, PublicKeyToken=null"
+  ]
+}

@@ -38,7 +38,7 @@
   <div class="crm-header-inner">
   <a class="crm-brand" href="{{ url_for('report_staff.queue' if local_user and local_user.role in ('AGENT', 'ADMIN') else 'consultation_form') }}">
     <img src="{{ url_for('favicon') }}" alt="" width="36" height="36">
-    <span>FinGuard<small>상담원 CRM</small></span>
+    <span>FinGuard</span>
   </a>
   <nav class="crm-nav" aria-label="상담원 메뉴">
   {% if local_user and local_user.role in ("AGENT", "ADMIN") %}
@@ -67,13 +67,14 @@
   <div class="crm-account">
   {% set role_labels = {"AGENT": "상담원", "ADMIN": "관리자", "SUPERVISOR": "승인자"} %}
   <span>{{ local_user.username }} <small>{{ role_labels.get(local_user.role, local_user.role) }}</small></span>
+  <strong class="site-context-tag">기업 내부 사이트</strong>
   <form method="post" action="{{ url_for('auth.logout') }}">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <button type="submit">로그아웃</button>
   </form>
   </div>
   {% elif local_auth_enabled %}
-  <a class="crm-home" href="{{ url_for('index') }}">고객 홈</a>
+  <div class="crm-account"><strong class="site-context-tag">기업 내부 사이트</strong><a class="crm-home" href="{{ url_for('index') }}">고객 홈</a></div>
   {% endif %}
   </div>
 </header>

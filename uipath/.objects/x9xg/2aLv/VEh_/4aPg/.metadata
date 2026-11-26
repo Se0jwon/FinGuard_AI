@@ -1,0 +1,15 @@
+﻿{
+  "Name": "CRM damage-type",
+  "Description": "CRM receipt damage-type",
+  "Type": "Element",
+  "TaxonomyType": "Label",
+  "Id": "4aPg5WzIP0S1GQ_TEFk_Yw",
+  "Reference": "F9ggLvmvHkGBkDPI03Dc3Q/4aPg5WzIP0S1GQ_TEFk_Yw",
+  "ParentRef": "F9ggLvmvHkGBkDPI03Dc3Q/VEh_ECPHIkG02u2guJkbwQ",
+  "Created": "2026-11-26T03:28:20.024619Z",
+  "Updated": "2026-11-26T03:28:20.024619Z",
+  "CreatedBy": [
+    "UiPath.UIAutomationCore, Version=26.10.7.0, Culture=neutral, PublicKeyToken=null",
+    "UiPath.Platform, Version=26.4.0.0, Culture=neutral, PublicKeyToken=null"
+  ]
+}

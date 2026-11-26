@@ -39,6 +39,15 @@
 .crm-brand small { display: block; font-size: 11px; color: #c3d4df; font-weight: 600; }
 .crm-nav, .crm-account { display: flex; align-items: center; flex-wrap: wrap; gap: 5px; }
 .crm-account, .crm-home { margin-left: auto; }
+.crm .site-context-tag {
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #c9f1e0;
+  color: #173d38;
+  font-size: 16px;
+  font-weight: 800;
+  white-space: nowrap;
+}
 .crm .crm-nav a, .crm .crm-home, .crm .crm-account button {
   padding: 9px 11px;
   border-radius: 8px;
