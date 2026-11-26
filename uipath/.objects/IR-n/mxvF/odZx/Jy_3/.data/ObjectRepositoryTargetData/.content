@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-16"?>
+<ObjectRepositoryTargetData ContentHash="-RVJ3FZGOEqY5QUhI7ExAA" xmlns="http://schemas.uipath.com/workflow/activities/uix" xmlns:scg="clr-namespace:System.Collections.Generic;assembly=System.Private.CoreLib" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <ObjectRepositoryTargetData.Data>
+    <TargetAnchorable x:Key="TargetAnchorable" DesignTimeRectangle="430, 1165, 337, 45" DesignTimeScaleFactor="1" ElementType="InputBox" ElementVisibilityArgument="Interactive" FullSelectorArgument="&lt;webctrl id='excel-intake-form' tag='FORM' /&gt;&lt;webctrl id='excel-received-at' tag='INPUT' /&gt;" Guid="b546ba59-bfa7-4156-bd26-eb15dd735f08" ScopeSelectorArgument="&lt;html app='chrome.exe' title='FinGuard 엑셀 접수' url='http://127.0.0.1:5001/*' /&gt;" SearchSteps="Selector" Version="V6" WaitForReadyArgument="Interactive">
+      <TargetAnchorable.Anchors>
+        <scg:List x:TypeArguments="ITarget" Capacity="0" />
+      </TargetAnchorable.Anchors>
+      <imageRef attrName="InformativeScreenshot" originalValue="504cbdfafd61b2b408cc1384206dc1ea.jpg" xmlns="">0lIKAXyXjpkKymWfyS4QUbw</imageRef>
+    </TargetAnchorable>
+  </ObjectRepositoryTargetData.Data>
+</ObjectRepositoryTargetData>

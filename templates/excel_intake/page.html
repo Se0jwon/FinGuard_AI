@@ -6,20 +6,29 @@
   <title>FinGuard 엑셀 접수</title>
   <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
   <link rel="stylesheet" href="{{ url_for('static', filename='excel-intake.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='portal.css') }}">
 </head>
-<body>
-  <header><div class="shell bar">
-    <a class="brand" href="{{ url_for('intake') }}"><img src="{{ url_for('static', filename='favicon.svg') }}" alt="" width="36" height="36"> FinGuard 엑셀 접수</a>
+<body class="portal">
+  <header class="portal-header"><div class="portal-header-inner">
+    <a class="portal-brand" href="{{ url_for('intake') }}">
+      <img src="{{ url_for('static', filename='favicon.svg') }}" alt="" width="36" height="36">
+      <span>FinGuard</span>
+    </a>
     {% if session.signed_in %}
-    <nav aria-label="접수 메뉴">
+    <nav class="portal-nav" aria-label="접수 메뉴">
       <a href="{{ url_for('intake') }}" {% if view == 'form' %}aria-current="page"{% endif %}>접수 등록</a>
       <a href="{{ url_for('records') }}" {% if view == 'records' %}aria-current="page"{% endif %}>접수 현황</a>
     </nav>
-    <form method="post" action="{{ url_for('logout') }}"><input type="hidden" name="csrf" value="{{ csrf }}"><button class="quiet">로그아웃</button></form>
     {% endif %}
+    <div class="portal-account">
+      <strong class="site-context-tag">기업 외부 사이트</strong>
+      {% if session.signed_in %}
+      <form method="post" action="{{ url_for('logout') }}"><input type="hidden" name="csrf" value="{{ csrf }}"><button class="portal-link-button">로그아웃</button></form>
+      {% endif %}
+    </div>
   </div></header>
   <main class="shell">
-  {% if error %}<p class="notice" role="alert">{{ error }}</p>{% endif %}
+  {% if error %}<p id="excel-save-error" class="notice" role="alert">{{ error }}</p>{% endif %}
   {% if view == 'login' %}
     <section class="panel narrow">
       <h1>엑셀 접수 로그인</h1>
@@ -27,60 +36,53 @@
         <input type="hidden" name="csrf" value="{{ csrf }}">
         <label for="password">접수 사이트 접근 토큰</label>
         <input id="password" name="password" type="password" autocomplete="current-password" required>
-        <button>로그인</button>
+        <button id="excel-login-submit" type="submit">로그인</button>
       </form>
     </section>
   {% elif view == 'form' %}
-    {% if pending %}
-    <section class="panel">
-      <h2>엑셀 저장 대기</h2>
-      <ul>{% for id in pending %}<li><a href="{{ url_for('review_draft', request_id=id) }}">{{ id }} 접수 폼 열기</a></li>{% endfor %}</ul>
-    </section>
-    {% endif %}
-    <section class="panel form-panel">
-      <h1>{{ '자동 접수 확인' if incident_id else '접수 등록' }}</h1>
-      {% if incident_id %}<p>CRM 접수번호 {{ incident_id }}</p>{% endif %}
-      <p class="description">{{ '승인된 내용을 확인한 뒤 엑셀에 저장해 주세요.' if incident_id else '등록한 내용은 접수 목록의 엑셀 파일에 저장됩니다.' }}</p>
-      {% set values = form or {} %}
-      <form method="post">
-        <input type="hidden" name="csrf" value="{{ csrf }}">
-        <input type="hidden" name="request_id" value="{{ request_id }}">
-        <div class="form-grid">
-          <div><label for="category">카테고리</label><select id="category" name="category" required {% if incident_id %}disabled{% endif %}>
-            <option value="">선택</option>{% for code,label in categories.items() %}<option value="{{ code }}" {% if values.get('category') == code %}selected{% endif %}>{{ label }}</option>{% endfor %}
-          </select></div>
-          <div><label for="risk_level">위험도</label><select id="risk_level" name="risk_level" {% if incident_id %}disabled{% endif %}>
-            {% for code,label in risks.items() %}<option value="{{ code }}" {% if values.get('risk_level') == code %}selected{% endif %}>{{ label }}</option>{% endfor %}
-          </select></div>
+    <section class="portal-hero" aria-labelledby="excel-title">
+      <div class="portal-hero-copy">
+        <h1 id="excel-title">엑셀 사고 접수</h1>
+        <p>금융 피해 접수를 등록하고 저장된 내역을 확인하세요.</p>
+        <div class="portal-hero-actions">
+          <a class="portal-button portal-button-primary" href="#excel-intake-form">접수 작성</a>
+          <a class="portal-button portal-button-outline" href="{{ url_for('records') }}">접수 현황</a>
         </div>
-        <label for="summary">접수 내용</label>
-        <textarea id="summary" name="summary" maxlength="2000" required {% if incident_id %}readonly{% endif %}>{{ values.get('summary', '') }}</textarea>
-        <div class="actions"><button>엑셀에 저장</button>{% if session.signed_in %}<a class="secondary" href="{{ url_for('records') }}">접수 현황</a>{% endif %}</div>
+      </div>
+    </section>
+    <section class="panel form-panel">
+      <h2>접수 등록</h2>
+      {% set values = form or {} %}
+      <form id="excel-intake-form" method="post" autocomplete="off">
+        <input type="hidden" name="csrf" value="{{ csrf }}">
+        <div class="form-grid">
+        {% for key, label, limit in fields %}
+          <div{% if key in ('conversation', 'ai-summary') %} class="form-wide"{% endif %}>
+            <label for="excel-{{ key }}">{{ label }}</label>
+            {% if key in ('conversation', 'ai-summary') %}
+            <textarea id="excel-{{ key }}" name="{{ key }}" maxlength="{{ limit }}" required>{{ values.get(key, '') }}</textarea>
+            {% else %}
+            <input type="text" id="excel-{{ key }}" name="{{ key }}" maxlength="{{ limit }}" value="{{ values.get(key, '') }}" required>
+            {% endif %}
+          </div>
+        {% endfor %}
+        </div>
+        <div class="actions"><button id="excel-submit" type="submit">접수 등록</button></div>
       </form>
     </section>
-  {% elif view == 'saved' %}
-    <section class="panel"><h1>엑셀에 저장했습니다</h1><p>{{ request_id }}</p></section>
   {% elif view == 'records' %}
+    {% for message in get_flashed_messages(category_filter=['saved']) %}
+    <p id="excel-save-success" class="notice" role="status">{{ message }}</p>
+    {% endfor %}
     <div class="page-heading"><div><h1>접수 현황</h1><p class="description">엑셀에 저장된 접수 {{ total }}건</p></div>
       <a class="primary" href="{{ url_for('download') }}">엑셀 다운로드 (.xlsx)</a></div>
-    <section class="panel overview" aria-labelledby="category-title">
-      <div><h2 id="category-title">카테고리별 접수 비중</h2>
-        <div class="donut" {% if chart %}style="--chart: conic-gradient({{ chart }})"{% endif %} aria-hidden="true"><span><b>{{ total }}</b>전체 접수</span></div>
-      </div>
-      <ul class="stats">
-        {% for label, count, percent, color in stats %}
-        <li style="--bar:{{ color }}"><span>{{ label }}</span><b>{{ count }}건 · {{ "%.1f"|format(percent) }}%</b>
-          <div class="track"><div class="fill" style="width: {{ percent }}%"></div></div></li>
-        {% endfor %}
-      </ul>
-    </section>
     <section class="panel sheet-panel">
       <h2>접수 목록</h2>
       <div class="sheet" tabindex="0" aria-label="엑셀 접수 목록">
-        <table><thead><tr><th scope="col">행</th><th scope="col">접수 시각 (한국 시간)</th><th scope="col">요청 ID</th><th scope="col">CRM 접수번호</th><th scope="col">카테고리</th><th scope="col">위험도</th><th scope="col">접수 내용</th></tr></thead>
-        <tbody>{% for time, request_id, incident_id, category, risk, summary in rows %}
-        <tr><th scope="row">{{ loop.revindex }}</th><td>{{ time }}</td><td>{{ request_id }}</td><td>{{ incident_id or '—' }}</td><td>{{ categories.get(category, category) }}</td><td>{{ risks.get(risk or '', risk) }}</td><td>{{ summary }}</td></tr>
-        {% else %}<tr><td colspan="7">아직 등록된 접수가 없습니다.</td></tr>{% endfor %}</tbody></table>
+        <table><thead><tr><th scope="col">행</th>{% for column in columns %}<th scope="col">{{ column }}</th>{% endfor %}</tr></thead>
+        <tbody>{% for row in rows %}
+        <tr><th scope="row">{{ loop.revindex }}</th>{% for value in row %}<td>{{ value if value is not none else '—' }}</td>{% endfor %}</tr>
+        {% else %}<tr><td colspan="{{ columns|length + 1 }}">아직 등록된 접수가 없습니다.</td></tr>{% endfor %}</tbody></table>
       </div>
     </section>
   {% endif %}

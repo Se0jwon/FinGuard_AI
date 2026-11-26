@@ -8,6 +8,7 @@ import sys
 import threading
 import time
 import webbrowser
+from contextlib import ExitStack
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from urllib.parse import urlsplit
@@ -27,6 +28,7 @@ LOCAL_KEYS = (
     "FINGUARD_ORCHESTRATOR_TOKEN", "FINGUARD_ORCHESTRATOR_SCOPE",
     "FINGUARD_ORCHESTRATOR_FOLDER", "FINGUARD_ORCHESTRATOR_FOLDER_KEY",
     "FINGUARD_ORCHESTRATOR_PROCESS",
+    "FINGUARD_EXCEL_INTAKE_TOKEN",
 )
 
 
@@ -195,14 +197,19 @@ def serve(state_dir, port, no_browser):
 
     from app import app
 
+    excel_token = os.getenv("FINGUARD_EXCEL_INTAKE_TOKEN", "")
+
     run_id = uuid4().hex
     active = state_dir / "active"
     temporary = state_dir / f"active-{run_id}.tmp"
     stop = state_dir / f"stop-{run_id}"
     url = f"http://127.0.0.1:{port}"
     try:
-        with LocalServer("127.0.0.1", port, app) as server:
+        with ExitStack() as servers:
+            server = servers.enter_context(LocalServer("127.0.0.1", port, app))
             server.timeout = 0.25
+            if excel_token:
+                start_local_excel(servers, excel_token)
             temporary.write_text(run_id, encoding="ascii")
             temporary.replace(active)
             print(f"FinGuard CRM ready at {url}", flush=True)
@@ -212,12 +219,29 @@ def serve(state_dir, port, no_browser):
                 server.handle_request()
     except KeyboardInterrupt:
         pass
+    except ValueError as error:
+        print(str(error), file=sys.stderr)
+        return 1
     finally:
         if active.exists() and active.read_text(encoding="ascii") == run_id:
             active.unlink()
         stop.unlink(missing_ok=True)
         temporary.unlink(missing_ok=True)
     return 0
+
+
+def start_local_excel(servers, token):
+    from excel_intake import create_app
+
+    excel_app = create_app(
+        token=token, workbook_path=ROOT / ".uipath" / "excel-intake" / "receipts.xlsx",
+    )
+    excel_server = servers.enter_context(LocalServer("127.0.0.1", 5001, excel_app))
+    worker = threading.Thread(target=excel_server.serve_forever)
+    worker.start()
+    servers.callback(worker.join)
+    servers.callback(excel_server.shutdown)
+    print("FinGuard Excel intake ready at http://127.0.0.1:5001", flush=True)
 
 
 def main():

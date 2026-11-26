@@ -99,6 +99,7 @@
         <Sequence DisplayName="Orchestrator Job">
           <Sequence.Variables>
             <Variable x:TypeArguments="x:String" Name="configScopes" />
+            <Variable x:TypeArguments="x:Boolean" Name="excelPrepared" />
           </Sequence.Variables>
           <Assign DisplayName="요청 ID 기록">
             <Assign.To><OutArgument x:TypeArguments="x:String">[requestId]</OutArgument></Assign.To>
@@ -117,6 +118,36 @@
             </ui:InvokeCode.Arguments>
           </ui:InvokeCode>
           <ui:LogMessage DisplayName="로봇 설정 조회 범위" Level="Info" Message="[configScopes]" />
+          <If DisplayName="CRM 접수 성공 후 Excel UI 자동화" Condition="[(status = &quot;SUCCESS&quot; OrElse status = &quot;DUPLICATE&quot;) AndAlso Not String.IsNullOrWhiteSpace(incidentNo)]">
+            <If.Then>
+              <TryCatch DisplayName="Excel 결과를 CRM 접수 결과와 독립 처리">
+                <TryCatch.Try>
+                  <Sequence DisplayName="Excel 별도 팝업 자동화">
+                    <ui:InvokeWorkflowFile DisplayName="ExcelIntake 실행" WorkflowFileName="ExcelIntake.xaml">
+                      <ui:InvokeWorkflowFile.Arguments>
+                        <InArgument x:TypeArguments="x:String" x:Key="in_CrmBaseUrl">[If(String.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("FINGUARD_CRM_BASE_URL", EnvironmentVariableTarget.Process)), Environment.GetEnvironmentVariable("FINGUARD_CRM_BASE_URL", EnvironmentVariableTarget.User), Environment.GetEnvironmentVariable("FINGUARD_CRM_BASE_URL", EnvironmentVariableTarget.Process))]</InArgument>
+                        <InArgument x:TypeArguments="x:String" x:Key="in_IncidentId">[incidentNo]</InArgument>
+                        <OutArgument x:TypeArguments="x:Boolean" x:Key="out_ExcelPrepared">[excelPrepared]</OutArgument>
+                      </ui:InvokeWorkflowFile.Arguments>
+                    </ui:InvokeWorkflowFile>
+                    <If DisplayName="Excel 폼 입력이 완료되지 않음" Condition="[Not excelPrepared]">
+                      <If.Then>
+                        <ui:LogMessage Level="Warn" Message="[&quot;Excel 폼 입력을 완료하지 못했습니다. 기존 CRM 접수 결과를 사용합니다.&quot;]" />
+                      </If.Then>
+                    </If>
+                  </Sequence>
+                </TryCatch.Try>
+                <TryCatch.Catches>
+                  <Catch x:TypeArguments="s:Exception">
+                    <ActivityAction x:TypeArguments="s:Exception">
+                      <ActivityAction.Argument><DelegateInArgument x:TypeArguments="s:Exception" Name="excelException" /></ActivityAction.Argument>
+                      <ui:LogMessage Level="Warn" Message="[&quot;Excel UI 처리 중 예외가 발생했습니다. 기존 CRM 접수 결과를 사용합니다.&quot;]" />
+                    </ActivityAction>
+                  </Catch>
+                </TryCatch.Catches>
+              </TryCatch>
+            </If.Then>
+          </If>
         </Sequence>
       </If.Then>
       <If.Else>

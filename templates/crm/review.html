@@ -7,7 +7,7 @@
   {% if show_executions %}<p><a href="{{ url_for('consultation_review') }}">승인 대기 요청</a></p>{% endif %}
   {% if pending %}
   <div class="crm-table-scroll"><table class="crm-queue">
-    <thead><tr><th>요청 ID</th><th>고객 ID</th><th>요청자</th><th>등록 시각 (한국 시간)</th><th>검토</th></tr></thead>
+    <thead><tr><th>요청 ID</th><th>고객 ID</th><th>요청자</th><th>등록 시각</th><th>검토</th></tr></thead>
     <tbody>
       {% for item in pending %}
       <tr>

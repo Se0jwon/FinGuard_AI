@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-16"?>
+<ObjectRepositoryScreenData ContentHash="WeJmcsAGYkeP-QFHQPhhgw" xmlns="http://schemas.uipath.com/workflow/activities/uix" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <ObjectRepositoryScreenData.Data>
+    <TargetApp x:Key="TargetApp" Area="-8, -8, 1936, 1056" BrowserType="Chrome" Selector="&lt;html app='chrome.exe' title='*FinGuard CRM*' url='http://127.0.0.1:5000/consultation*' /&gt;" Url="[string.Format(&quot;http://127.0.0.1:5000/consultation/customer-reports/{0}&quot;, reportId)]" Version="V3">
+      <TargetApp.SapInfo>
+        <SAPElementInfo IsSapSubsystem="False" WebAutomationFramework="Default" />
+      </TargetApp.SapInfo>
+      <imageRef attrName="InformativeScreenshot" originalValue="ceb56002c6752e26f3c66634203d7292.jpg" xmlns="">0LYQ6LrJnHE2vO_pQvC39TA</imageRef>
+    </TargetApp>
+    <NInteractionMode x:Key="InteractionMode">DebuggerApi</NInteractionMode>
+  </ObjectRepositoryScreenData.Data>
+</ObjectRepositoryScreenData>

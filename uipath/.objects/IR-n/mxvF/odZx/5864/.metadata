@@ -1,0 +1,15 @@
+﻿{
+  "Name": "Excel submit",
+  "Description": "FinGuard Excel submit",
+  "Type": "Element",
+  "TaxonomyType": "Button",
+  "Id": "5864gIrG7U69-mV4vSp07A",
+  "Reference": "F9ggLvmvHkGBkDPI03Dc3Q/5864gIrG7U69-mV4vSp07A",
+  "ParentRef": "F9ggLvmvHkGBkDPI03Dc3Q/odZxPJWIckaisgJ8eFF3dw",
+  "Created": "2026-11-26T03:27:11.1770555Z",
+  "Updated": "2026-11-26T03:27:11.1770555Z",
+  "CreatedBy": [
+    "UiPath.UIAutomationCore, Version=26.10.7.0, Culture=neutral, PublicKeyToken=null",
+    "UiPath.Platform, Version=26.4.0.0, Culture=neutral, PublicKeyToken=null"
+  ]
+}

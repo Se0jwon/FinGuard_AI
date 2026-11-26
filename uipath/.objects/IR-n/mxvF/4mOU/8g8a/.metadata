@@ -1,0 +1,14 @@
+﻿{
+  "Name": "Excel Records Ready",
+  "Type": "Element",
+  "TaxonomyType": "Label",
+  "Id": "8g8aKADFZka4_XnQ8gGBdg",
+  "Reference": "F9ggLvmvHkGBkDPI03Dc3Q/8g8aKADFZka4_XnQ8gGBdg",
+  "ParentRef": "F9ggLvmvHkGBkDPI03Dc3Q/4mOUS3liiESa6oj0wjM1UA",
+  "Created": "2026-11-26T03:44:35.3634654Z",
+  "Updated": "2026-11-26T03:44:35.3634654Z",
+  "CreatedBy": [
+    "UiPath.UIAutomationCore, Version=26.10.7.0, Culture=neutral, PublicKeyToken=null",
+    "UiPath.Platform, Version=26.4.0.0, Culture=neutral, PublicKeyToken=null"
+  ]
+}

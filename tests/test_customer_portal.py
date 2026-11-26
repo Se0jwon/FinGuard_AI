@@ -94,7 +94,8 @@ def test_customer_registration_report_replay_and_isolation(demo):
     assert "신고 시각" not in owner.get("/customer/history").text
     detail = owner.get(path).text
     assert "신고 시각" not in detail and "처리 이력" not in detail
-    assert "피해 발생 시각 (한국 시간)" in detail and "2026-11-25 12:30" in detail
+    assert "피해 발생 시각" in detail and "2026-11-25 12:30" in detail
+    assert "한국 시간" not in detail
     assert path not in outsider.get("/customer/history").text
     assert outsider.get(path).status_code == 404
     assert outsider.get("/api/customers").status_code == 401
@@ -122,7 +123,8 @@ def test_customer_report_full_job_and_receipt_flow(demo, orchestrator):
     assert 'href="/static/crm.css"' in review.text
     assert 'class="crm-insights"' in review.text
     assert agent.get("/static/crm.css").status_code == 200
-    assert "신고 시각 (한국 시간)" in review.text and "2026-11-25 17:17" in review.text
+    assert "신고 시각" in review.text and "2026-11-25 17:17" in review.text
+    assert "한국 시간" not in review.text
     assert "거래 내역 이상 징후 확인" in review.text
     assert "본인 확인 후 담당 부서 이관" in review.text
     assert "승인 및 자동 접수 시작" in review.text

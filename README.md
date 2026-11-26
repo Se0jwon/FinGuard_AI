@@ -1,33 +1,89 @@
 # FinGuard_AI
 
-## DB 없는 엑셀 접수 사이트
+## CRM 화면에서 엑셀로 접수
 
-엑셀 접수 사이트는 FinGuard CRM과 별도로 `127.0.0.1:5001`에서 실행됩니다.
-수동 접수와 상담원이 저장을 확인한 RPA 접수가 같은 `receipts.xlsx`에 기록됩니다. **접수 현황**에서
-스프레드시트 형태의 표, 카테고리 비중 도넛, 카테고리별 건수와 게이지를 보고 실제
-`.xlsx`를 다운로드할 수 있습니다. 파일은 `.uipath/excel-intake/`에 저장됩니다.
-파일을 Excel로 편집할 때 저장 요청이 들어오면 파일을 닫고 다시 시도합니다.
+`FINGUARD_EXCEL_INTAKE_TOKEN`을 Git에서 제외된 `.env.local`에 32자 이상 ASCII 비밀값으로 설정합니다.
+`.\start.bat`으로 CRM(`127.0.0.1:5000`)과 엑셀 사이트(`127.0.0.1:5001`)를 시작하고
+`.\stop.bat`으로 함께 종료합니다. CRM에 로그인한 직원이 **엑셀 접수 폼 열기** 버튼을 누르면
+일회용 로그인 티켓으로 인증되어 5001의 빈 폼이 팝업 창에서 열립니다.
+5001에 직접 접속하는 경우에는 기존 접수 사이트 로그인을 이용합니다.
 
-1. 해당 Conda 환경에서 `python -m pip install openpyxl==3.1.5`로 엑셀 의존성을 설치합니다.
-2. Git에서 제외된 프로젝트 `.env.local`에 별도의 32자 이상 임의 비밀값을
-   `FINGUARD_EXCEL_INTAKE_TOKEN`으로 설정합니다. FinGuard CRM에서 로봇 접수를
-   엑셀에도 보내려면 같은 파일에 `FINGUARD_EXCEL_INTAKE_URL=http://127.0.0.1:5001`을
-   설정합니다. 이 URL을 생략하면 기존 CRM 접수만 사용합니다.
-3. 저장소 루트에서 `python excel_intake.py`를 실행하고 브라우저에서
-   `http://127.0.0.1:5001/`을 엽니다. 접수 사이트 토큰으로 로그인합니다.
-   FinGuard CRM은 설정을 반영하는 다음 시작부터 연동합니다.
-4. 상담원이 FinGuard에서 신고를 승인하면 기존 UiPath Job이 시작됩니다. 로봇 callback이
-   CRM 접수를 저장한 뒤 승인 스냅샷을 엑셀 사이트로 전달해 접수 폼을 미리 채웁니다.
-5. 승인 화면에서 폼이 준비되면 브라우저가 해당 요청의 엑셀 폼으로 자동 이동합니다.
-   신고 상세의 **엑셀 접수 폼 열기** 버튼으로 다시 열 수 있습니다. 상담원 로그인으로
-   해당 요청에 한해 접근하므로 엑셀 사이트 토큰을 입력할 필요가 없습니다.
-   내용을 확인하고 **엑셀에 저장**을 누릅니다.
-   대기 데이터는 `.uipath/excel-intake/drafts/`에 보관하며 저장 후 삭제합니다.
-   동일 요청은 엑셀에 한 번만 기록됩니다. UiPath 1.0.3의 입출력은 그대로 사용합니다.
+CRM 사고 접수는 기존 SQLite와 로봇 콜백을 사용합니다. CRM과 엑셀 사이트 사이의 업무 데이터
+전송 API와 JSON 초안은 제거됐습니다. 엑셀은 브라우저의 **접수 등록** 입력을
+`.uipath/excel-intake/receipts.xlsx`에 기록합니다. 같은 사고 접수번호는 한 번만 저장됩니다.
+**접수 현황**은 이 파일을 표로 표시하고 원본 `.xlsx`를 다운로드할 수 있습니다.
+Excel 데스크톱 앱에서 파일을 열어 둔 동안 저장 오류가 나면 파일을 닫고 다시 등록합니다.
 
-연동이 활성화된 상태에서 접수 폼 준비가 실패하면 로봇 callback은 실패를 반환하고,
-이미 발급된 CRM 접수번호는 보존됩니다. 실제 승인 전 접수 사이트를 먼저 실행하세요.
-수동 저장에 실패하면 파일 잠금 상태를 확인한 뒤 같은 대기 폼에서 다시 저장합니다.
+### UiPath Studio에서 ExcelIntake.xaml 설정
+
+Windows/VB 프로젝트의 `ExcelIntake.xaml`에는 실제 UiPath Activity와 변수 연결이 들어 있습니다.
+두 브라우저와 CRM 11개 필드, 엑셀 입력란 11개 및 팝업 열기 버튼을 실제 화면에서
+캡처해 연결했습니다. Orchestrator는 배포된 패키지를 실행하므로 프로젝트 변경은
+새 버전을 게시하고 기존 프로세스에 연결한 뒤에 적용됩니다.
+`Main.xaml`의 **Orchestrator Job** 분기는 기존 CRM 접수 결과가 `SUCCESS` 또는 `DUPLICATE`이고
+사고번호가 있을 때만 엑셀 워크플로를 호출합니다. `in_CrmBaseUrl`과 `in_IncidentId`를 넘기고
+`out_ExcelPrepared`를 받습니다. 엑셀 입력 오류는 별도로 기록하며 CRM 결과는 보존합니다.
+
+1. 로봇 Windows 세션의 Chrome에서 이 신고를 볼 권한이 있는 직원 계정으로 CRM에 로그인합니다.
+   CRM **Use Application/Browser**에서 해당 Chrome 창을 지정하고 **Open = Never**,
+   **Close = Never**, **Attach mode = By instance**로 설정합니다. 무인 실행에서 세션이
+   만료될 수 있다면 이 스코프 안에서 **Go To URL** 다음에 **Check App State**로
+   로그인 화면의 `#username`을 확인하는 분기를 추가합니다. 권한 있는 계정의 Orchestrator
+   Credential Asset을 읽고 **Type Into** `#username`, **Type Into (SecureText)** `#password`,
+   **Click** `#crm-login-submit` 순으로 로그인한 뒤 같은 **Go To URL**을 다시 실행합니다.
+   고객 신고가 배정된 상담원 계정으로 접근할 수 있는지 확인합니다.
+2. **Go To URL**은 CRM의 `/consultation/customer-reports/receipt/<사고번호>`로 이동합니다.
+   **Check App State**의 대상은 `#crm-incident-id` (`DD`)입니다. 나타났을 때에만 다음
+   11개 **Get Text**가 실행됩니다. 값 타깃의 태그는 모두 `DD`이고, 각 출력은 기존 String 변수에
+   연결되어 있습니다.
+
+| Get Text CRM HTML ID | String 변수 | Type Into Excel HTML ID |
+| --- | --- | --- |
+| `crm-customer-name` | `customerName` | `excel-customer-name` |
+| `crm-report-id` | `reportId` | `excel-report-id` |
+| `crm-incident-id` | `incidentId` | `excel-incident-id` |
+| `crm-damage-type` | `damageType` | `excel-damage-type` |
+| `crm-damage-amount` | `damageAmount` | `excel-damage-amount` |
+| `crm-occurred-at` | `occurredAt` | `excel-occurred-at` |
+| `crm-conversation` | `conversation` | `excel-conversation` |
+| `crm-ai-summary` | `aiSummary` | `excel-ai-summary` |
+| `crm-fds-risk` | `fdsRisk` | `excel-fds-risk` |
+| `crm-assigned-agent` | `assignedAgent` | `excel-assigned-agent` |
+| `crm-received-at` | `receivedAt` | `excel-received-at` |
+
+3. 읽은 사고번호가 `in_IncidentId`와 일치하면 **Click**으로 CRM의 `#open-excel-form`
+   (`BUTTON`)을 누릅니다. 실제 팝업 열기를 위해 이 Activity의 **Input mode = Hardware Events**를
+   설정합니다. CRM이 발급한 로그인 티켓으로 5001에 접근합니다.
+4. 엑셀 **Use Application/Browser**는 클릭으로 열린 5001번 Chrome 팝업을 지정합니다.
+   **Open = Never**, **Attach mode = By instance**, **Close = Never**를 사용하고 동일한
+   5001 탭이나 창이 여럿이면 Studio 지정 단계와 로봇 실행 전에 정리합니다.
+   첫 **Type Into**가 `#excel-customer-name` (`INPUT`)이 준비될 때까지 기다립니다.
+   위 표의 각 **Type Into**를 실제 입력란에 지정합니다. `conversation`과 `aiSummary`의 태그는
+   `TEXTAREA`, 나머지는 `INPUT`입니다. 여러 줄 한국어를 채울 때 줄바꿈과
+   대괄호가 보존되는지 샘플 값으로 확인합니다.
+5. 11개 입력이 끝나면 `out_ExcelPrepared = True`로 설정하고 팝업을 열어 둡니다.
+   상담사는 로봇이 폼을 채운 Chrome 화면에서 값을 검토한 뒤 **접수 등록**을 눌러 저장합니다.
+6. 각 타깃에서 **Validate**와 **Highlight**를 실행하고 프로젝트를 빌드합니다.
+   실제 실행을 승인받은 뒤에는 먼저 팝업의 11개 값과 제출 전 상태를 확인합니다.
+   상담사가 등록한 뒤 **접수 현황 → 엑셀 다운로드 (.xlsx)**에서 사고번호와 항목을 확인합니다.
+   엑셀 사이트는 파일 잠금 안에서 사고번호 중복을 확인합니다.
+
+#### Windows에서 Helm이 시작되지 않을 때
+
+기본 `C:\Program Files\dotnet`에 .NET 6만 있고 UiPath에 .NET 10이 포함된 환경에서는,
+UiPath CLI를 실행하는 PowerShell 세션에서 두 환경변수를 지정합니다. 설치 경로의 버전은
+설치된 UiPath Runtime 폴더와 맞춰야 합니다.
+
+```powershell
+$env:DOTNET_ROOT_X64 = 'C:\Program Files\UiPathPlatform\Runtimes\27.0.5'
+$env:DOTNET_ROOT = $env:DOTNET_ROOT_X64
+```
+
+이 설정 후에도 Helm이 준비 상태를 기록하지 못하면
+`%LOCALAPPDATA%\UiPath\Logs\Helm`에 현재 Windows 사용자로 로그를 쓸 수 있는지 확인합니다.
+이 작업의 제한된 실행 환경에서는 로그 생성 단계의 `UnauthorizedAccessException`과
+UiPath IPC의 `EPERM`을 확인했습니다. 일반 사용자 세션에서 허용된 실행 권한으로 CLI를
+다시 실행해 검증과 브라우저 캡처 응답을 확인했습니다.
 
 ## 고객 서비스와 상담원 직접 승인
 

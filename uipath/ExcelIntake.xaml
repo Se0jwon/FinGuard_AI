@@ -1,0 +1,303 @@
+<Activity mc:Ignorable="sap sap2010" x:Class="ExcelIntake" xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation" xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation" xmlns:scg="clr-namespace:System.Collections.Generic;assembly=System.Private.CoreLib" xmlns:sco="clr-namespace:System.Collections.ObjectModel;assembly=System.Private.CoreLib" xmlns:sd="clr-namespace:System.Drawing;assembly=System.Drawing.Common" xmlns:sd1="clr-namespace:System.Drawing;assembly=System.Drawing.Primitives" xmlns:ui="http://schemas.uipath.com/workflow/activities" xmlns:uix="http://schemas.uipath.com/workflow/activities/uix" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <x:Members>
+    <x:Property Name="in_CrmBaseUrl" Type="InArgument(x:String)" />
+    <x:Property Name="in_IncidentId" Type="InArgument(x:String)" />
+    <x:Property Name="out_ExcelPrepared" Type="OutArgument(x:Boolean)" />
+  </x:Members>
+  <VisualBasic.Settings>
+    <x:Null />
+  </VisualBasic.Settings>
+  <sap2010:WorkflowViewState.IdRef>ActivityBuilder_1</sap2010:WorkflowViewState.IdRef>
+  <TextExpression.NamespacesForImplementation>
+    <sco:Collection x:TypeArguments="x:String">
+      <x:String>System.Activities</x:String>
+      <x:String>System.Activities.Statements</x:String>
+      <x:String>System.Activities.Expressions</x:String>
+      <x:String>System.Activities.Validation</x:String>
+      <x:String>System.Activities.XamlIntegration</x:String>
+      <x:String>Microsoft.VisualBasic</x:String>
+      <x:String>Microsoft.VisualBasic.Activities</x:String>
+      <x:String>System</x:String>
+      <x:String>System.Collections</x:String>
+      <x:String>System.Collections.Generic</x:String>
+      <x:String>System.Collections.ObjectModel</x:String>
+      <x:String>System.Data</x:String>
+      <x:String>System.Diagnostics</x:String>
+      <x:String>System.Drawing</x:String>
+      <x:String>System.IO</x:String>
+      <x:String>System.Linq</x:String>
+      <x:String>System.Net.Mail</x:String>
+      <x:String>System.Xml</x:String>
+      <x:String>System.Xml.Linq</x:String>
+      <x:String>UiPath.Core</x:String>
+      <x:String>UiPath.Core.Activities</x:String>
+      <x:String>System.Windows.Markup</x:String>
+      <x:String>GlobalVariablesNamespace</x:String>
+      <x:String>GlobalConstantsNamespace</x:String>
+    </sco:Collection>
+  </TextExpression.NamespacesForImplementation>
+  <TextExpression.ReferencesForImplementation>
+    <sco:Collection x:TypeArguments="AssemblyReference">
+      <AssemblyReference>System.Activities</AssemblyReference>
+      <AssemblyReference>Microsoft.VisualBasic</AssemblyReference>
+      <AssemblyReference>System.Private.CoreLib</AssemblyReference>
+      <AssemblyReference>mscorlib</AssemblyReference>
+      <AssemblyReference>System.Data</AssemblyReference>
+      <AssemblyReference>System</AssemblyReference>
+      <AssemblyReference>System.Linq</AssemblyReference>
+      <AssemblyReference>System.Data.Common</AssemblyReference>
+      <AssemblyReference>System.Drawing</AssemblyReference>
+      <AssemblyReference>System.Drawing.Primitives</AssemblyReference>
+      <AssemblyReference>System.Drawing.Common</AssemblyReference>
+      <AssemblyReference>System.Core</AssemblyReference>
+      <AssemblyReference>System.Xml</AssemblyReference>
+      <AssemblyReference>System.Xml.Linq</AssemblyReference>
+      <AssemblyReference>PresentationFramework</AssemblyReference>
+      <AssemblyReference>WindowsBase</AssemblyReference>
+      <AssemblyReference>PresentationCore</AssemblyReference>
+      <AssemblyReference>System.Xaml</AssemblyReference>
+      <AssemblyReference>UiPath.System.Activities</AssemblyReference>
+      <AssemblyReference>UiPath.UiAutomation.Activities</AssemblyReference>
+      <AssemblyReference>System.Data.DataSetExtensions</AssemblyReference>
+      <AssemblyReference>System.Net.Mail</AssemblyReference>
+      <AssemblyReference>System.ObjectModel</AssemblyReference>
+      <AssemblyReference>System.ComponentModel.TypeConverter</AssemblyReference>
+    </sco:Collection>
+  </TextExpression.ReferencesForImplementation>
+  <Sequence DisplayName="Excel 접수 UI 자동화" sap:VirtualizedContainerService.HintSize="690,4292" sap2010:WorkflowViewState.IdRef="Sequence_1">
+    <Sequence.Variables>
+      <Variable x:TypeArguments="x:String" Name="customerName" />
+      <Variable x:TypeArguments="x:String" Name="reportId" />
+      <Variable x:TypeArguments="x:String" Name="incidentId" />
+      <Variable x:TypeArguments="x:String" Name="damageType" />
+      <Variable x:TypeArguments="x:String" Name="damageAmount" />
+      <Variable x:TypeArguments="x:String" Name="occurredAt" />
+      <Variable x:TypeArguments="x:String" Name="conversation" />
+      <Variable x:TypeArguments="x:String" Name="aiSummary" />
+      <Variable x:TypeArguments="x:String" Name="fdsRisk" />
+      <Variable x:TypeArguments="x:String" Name="assignedAgent" />
+      <Variable x:TypeArguments="x:String" Name="receivedAt" />
+    </Sequence.Variables>
+    <sap:WorkflowViewStateService.ViewState>
+      <scg:Dictionary x:TypeArguments="x:String, x:Object">
+        <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+      </scg:Dictionary>
+    </sap:WorkflowViewStateService.ViewState>
+    <Assign DisplayName="엑셀 폼 입력 결과 초기화" sap:VirtualizedContainerService.HintSize="690,175" sap2010:WorkflowViewState.IdRef="Assign_1">
+      <Assign.To>
+        <OutArgument x:TypeArguments="x:Boolean">[out_ExcelPrepared]</OutArgument>
+      </Assign.To>
+      <Assign.Value>
+        <InArgument x:TypeArguments="x:Boolean">[False]</InArgument>
+      </Assign.Value>
+    </Assign>
+    <uix:NApplicationCard AttachMode="ByInstance" CloseMode="Never" DisplayName="CRM 직원 Chrome 창" HealingAgentBehavior="Job" sap:VirtualizedContainerService.HintSize="690,2784" sap2010:WorkflowViewState.IdRef="NApplicationCard_1" InteractionMode="DebuggerApi" OpenMode="Never" ScopeGuid="8a28a032-af80-49db-845a-44b92de37582" Version="V2">
+      <uix:NApplicationCard.Body>
+        <ActivityAction x:TypeArguments="x:Object">
+          <ActivityAction.Argument>
+            <DelegateInArgument x:TypeArguments="x:Object" Name="WSSessionData" />
+          </ActivityAction.Argument>
+          <Sequence DisplayName="CRM 접수 정보 읽기" sap:VirtualizedContainerService.HintSize="686,2580" sap2010:WorkflowViewState.IdRef="Sequence_3">
+            <sap:WorkflowViewStateService.ViewState>
+              <scg:Dictionary x:TypeArguments="x:String, x:Object">
+                <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+              </scg:Dictionary>
+            </sap:WorkflowViewStateService.ViewState>
+            <uix:NGoToUrl DisplayName="CRM 사고 접수 완료 상세" sap:VirtualizedContainerService.HintSize="652,123" sap2010:WorkflowViewState.IdRef="NGoToUrl_1" ScopeIdentifier="8a28a032-af80-49db-845a-44b92de37582" Url="[in_CrmBaseUrl.TrimEnd(&quot;/&quot;c) &amp; &quot;/consultation/customer-reports/receipt/&quot; &amp; System.Uri.EscapeDataString(in_IncidentId)]" Version="V5" />
+            <uix:NCheckState DisplayName="CRM 사고번호 표시 확인 #crm-incident-id" HealingAgentBehavior="Disabled" sap:VirtualizedContainerService.HintSize="652,2059" sap2010:WorkflowViewState.IdRef="NCheckState_1" ScopeIdentifier="8a28a032-af80-49db-845a-44b92de37582" Timeout="15" Version="V5">
+              <uix:NCheckState.IfExists>
+                <Sequence DisplayName="접수 완료 화면에서 Get Text" sap:VirtualizedContainerService.HintSize="650,1624" sap2010:WorkflowViewState.IdRef="Sequence_2">
+                  <sap:WorkflowViewStateService.ViewState>
+                    <scg:Dictionary x:TypeArguments="x:String, x:Object">
+                      <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+                    </scg:Dictionary>
+                  </sap:WorkflowViewStateService.ViewState>
+                  <uix:NGetText DisplayName="Get Text #crm-customer-name" HealingAgentBehavior="SameAsCard" sap:VirtualizedContainerService.HintSize="616,143" sap2010:WorkflowViewState.IdRef="NGetText_1" ScopeIdentifier="8a28a032-af80-49db-845a-44b92de37582" TextString="[customerName]" Version="V5">
+                    <uix:NGetText.Target>
+                      <uix:TargetAnchorable ContentHash="t1k3iPxjMUGBuYE8T80BOw" DesignTimeRectangle="455, 279, 315, 27" ElementType="Text" ElementVisibilityArgument="Interactive" FullSelectorArgument="&lt;webctrl id='crm-customer-name' tag='DD' /&gt;" Guid="40fa3b59-9d16-42a9-9b3b-4bf569e5c64d" InformativeScreenshot="12f5d40ededf2ba286e1a46e3270c567.jpg" Reference="F9ggLvmvHkGBkDPI03Dc3Q/KmYxL35WnUeDTDtNCrhJhg" ScopeSelectorArgument="&lt;html app='chrome.exe' title='*FinGuard CRM*' url='http://127.0.0.1:5000/consultation*' /&gt;" SearchSteps="Selector" Version="V6" WaitForReadyArgument="Interactive" />
+                    </uix:NGetText.Target>
+                  </uix:NGetText>
+                  <uix:NGetText DisplayName="Get Text #crm-report-id" HealingAgentBehavior="SameAsCard" sap:VirtualizedContainerService.HintSize="616,143" sap2010:WorkflowViewState.IdRef="NGetText_2" ScopeIdentifier="8a28a032-af80-49db-845a-44b92de37582" TextString="[reportId]" Version="V5">
+                    <uix:NGetText.Target>
+                      <uix:TargetAnchorable ContentHash="UHXedb3BYkuTLE-whklsKA" DesignTimeRectangle="803, 279, 315, 54" ElementType="Text" ElementVisibilityArgument="Interactive" FullSelectorArgument="&lt;webctrl id='crm-report-id' tag='DD' /&gt;" Guid="18d81f8b-6e85-4bc6-a4c5-bf9eb2b1b6bf" InformativeScreenshot="3d74f6c486716d3e3c973f9446898317.jpg" Reference="F9ggLvmvHkGBkDPI03Dc3Q/bIS8U78am0e2rCmyP8f7-A" ScopeSelectorArgument="&lt;html app='chrome.exe' title='*FinGuard CRM*' url='http://127.0.0.1:5000/consultation*' /&gt;" SearchSteps="Selector" Version="V6" WaitForReadyArgument="Interactive" />
+                    </uix:NGetText.Target>
+                  </uix:NGetText>
+                  <uix:NGetText DisplayName="Get Text #crm-incident-id" HealingAgentBehavior="SameAsCard" sap:VirtualizedContainerService.HintSize="616,143" sap2010:WorkflowViewState.IdRef="NGetText_3" ScopeIdentifier="8a28a032-af80-49db-845a-44b92de37582" TextString="[incidentId]" Version="V5">
+                    <uix:NGetText.Target>
+                      <uix:TargetAnchorable ContentHash="79iFlHMemEuuv__3-xmMnw" DesignTimeRectangle="1151, 279, 316, 27" ElementType="Text" ElementVisibilityArgument="Interactive" FullSelectorArgument="&lt;webctrl id='crm-incident-id' tag='DD' /&gt;" Guid="4ed7b695-4b92-483a-8a33-90cbbcba85ff" InformativeScreenshot="4d6abb23d88be6e3a8610fa5c5e56b2d.jpg" Reference="F9ggLvmvHkGBkDPI03Dc3Q/8QnRbF-OrkaT481kNwRJiw" ScopeSelectorArgument="&lt;html app='chrome.exe' title='*FinGuard CRM*' url='http://127.0.0.1:5000/consultation*' /&gt;" SearchSteps="Selector" Version="V6" WaitForReadyArgument="Interactive" />
+                    </uix:NGetText.Target>
+                  </uix:NGetText>
+                  <uix:NGetText DisplayName="Get Text #crm-damage-type" HealingAgentBehavior="SameAsCard" sap:VirtualizedContainerService.HintSize="616,143" sap2010:WorkflowViewState.IdRef="NGetText_4" ScopeIdentifier="8a28a032-af80-49db-845a-44b92de37582" TextString="[damageType]" Version="V5">
+                    <uix:NGetText.Target>
+                      <uix:TargetAnchorable ContentHash="fEH2pSdCHke2GSVZHAt_hQ" DesignTimeRectangle="455, 397, 315, 27" ElementType="Text" ElementVisibilityArgument="Interactive" FullSelectorArgument="&lt;webctrl id='crm-damage-type' tag='DD' /&gt;" Guid="242946d2-0d94-4347-b803-4d4f6518876b" InformativeScreenshot="879833793fb54434140ee9d1f0845e93.jpg" Reference="F9ggLvmvHkGBkDPI03Dc3Q/4aPg5WzIP0S1GQ_TEFk_Yw" ScopeSelectorArgument="&lt;html app='chrome.exe' title='*FinGuard CRM*' url='http://127.0.0.1:5000/consultation*' /&gt;" SearchSteps="Selector" Version="V6" WaitForReadyArgument="Interactive" />
+                    </uix:NGetText.Target>
+                  </uix:NGetText>
+                  <uix:NGetText DisplayName="Get Text #crm-damage-amount" HealingAgentBehavior="SameAsCard" sap:VirtualizedContainerService.HintSize="616,143" sap2010:WorkflowViewState.IdRef="NGetText_5" ScopeIdentifier="8a28a032-af80-49db-845a-44b92de37582" TextString="[damageAmount]" Version="V5">
+                    <uix:NGetText.Target>
+                      <uix:TargetAnchorable ContentHash="RwzHEJvZ-UimH3qKXCBkLw" DesignTimeRectangle="803, 397, 315, 27" ElementType="Text" ElementVisibilityArgument="Interactive" FullSelectorArgument="&lt;webctrl id='crm-damage-amount' tag='DD' /&gt;" Guid="6afc743e-4e2c-49e3-ab01-a14442343bea" InformativeScreenshot="bf4fb2b4e1e594aab244137f9fa0ad72.jpg" Reference="F9ggLvmvHkGBkDPI03Dc3Q/lcxyCOtkhkSa1HvwcxjZ1w" ScopeSelectorArgument="&lt;html app='chrome.exe' title='*FinGuard CRM*' url='http://127.0.0.1:5000/consultation*' /&gt;" SearchSteps="Selector" Version="V6" WaitForReadyArgument="Interactive" />
+                    </uix:NGetText.Target>
+                  </uix:NGetText>
+                  <uix:NGetText DisplayName="Get Text #crm-occurred-at" HealingAgentBehavior="SameAsCard" sap:VirtualizedContainerService.HintSize="616,143" sap2010:WorkflowViewState.IdRef="NGetText_6" ScopeIdentifier="8a28a032-af80-49db-845a-44b92de37582" TextString="[occurredAt]" Version="V5">
+                    <uix:NGetText.Target>
+                      <uix:TargetAnchorable ContentHash="qtoeQ_VIxU--zehS72tUqw" DesignTimeRectangle="1151, 397, 316, 27" ElementType="Text" ElementVisibilityArgument="Interactive" FullSelectorArgument="&lt;webctrl id='crm-occurred-at' tag='DD' /&gt;" Guid="ea5f19c3-04ba-408a-aa8e-969c82bfa811" InformativeScreenshot="06832bdd549e28bdbb6fad2003ff29e1.jpg" Reference="F9ggLvmvHkGBkDPI03Dc3Q/QYpAtHvW-0ipThPK53ZWoQ" ScopeSelectorArgument="&lt;html app='chrome.exe' title='*FinGuard CRM*' url='http://127.0.0.1:5000/consultation*' /&gt;" SearchSteps="Selector" Version="V6" WaitForReadyArgument="Interactive" />
+                    </uix:NGetText.Target>
+                  </uix:NGetText>
+                  <uix:NGetText DisplayName="Get Text #crm-conversation" HealingAgentBehavior="SameAsCard" sap:VirtualizedContainerService.HintSize="616,143" sap2010:WorkflowViewState.IdRef="NGetText_7" ScopeIdentifier="8a28a032-af80-49db-845a-44b92de37582" TextString="[conversation]" Version="V5">
+                    <uix:NGetText.Target>
+                      <uix:TargetAnchorable ContentHash="RhudCKBJGESEiJyTHY4N2A" DesignTimeRectangle="455, 488, 1012, 27" ElementType="Text" ElementVisibilityArgument="Interactive" FullSelectorArgument="&lt;webctrl id='crm-conversation' tag='DD' /&gt;" Guid="b5d37ebf-c8f9-4d97-b3cf-9b34499d92c8" InformativeScreenshot="6edb25982eed29315c5e45434e497c1b.jpg" Reference="F9ggLvmvHkGBkDPI03Dc3Q/eSWQwLL-oUSb_unhGrEStw" ScopeSelectorArgument="&lt;html app='chrome.exe' title='*FinGuard CRM*' url='http://127.0.0.1:5000/consultation*' /&gt;" SearchSteps="Selector" Version="V6" WaitForReadyArgument="Interactive" />
+                    </uix:NGetText.Target>
+                  </uix:NGetText>
+                  <uix:NGetText DisplayName="Get Text #crm-ai-summary" HealingAgentBehavior="SameAsCard" sap:VirtualizedContainerService.HintSize="616,143" sap2010:WorkflowViewState.IdRef="NGetText_8" ScopeIdentifier="8a28a032-af80-49db-845a-44b92de37582" TextString="[aiSummary]" Version="V5">
+                    <uix:NGetText.Target>
+                      <uix:TargetAnchorable ContentHash="XwChBuw4E0er7ZXhbC3wSw" DesignTimeRectangle="455, 579, 1012, 28" ElementType="Text" ElementVisibilityArgument="Interactive" FullSelectorArgument="&lt;webctrl id='crm-ai-summary' tag='DD' /&gt;" Guid="816a5b4e-fbff-4638-8d36-46b87618092b" InformativeScreenshot="d67b3fe07140d2c6171f5842b4bd493f.jpg" Reference="F9ggLvmvHkGBkDPI03Dc3Q/7PoEQiV74kuZ8tFuoI_IMQ" ScopeSelectorArgument="&lt;html app='chrome.exe' title='*FinGuard CRM*' url='http://127.0.0.1:5000/consultation*' /&gt;" SearchSteps="Selector" Version="V6" WaitForReadyArgument="Interactive" />
+                    </uix:NGetText.Target>
+                  </uix:NGetText>
+                  <uix:NGetText DisplayName="Get Text #crm-fds-risk" HealingAgentBehavior="SameAsCard" sap:VirtualizedContainerService.HintSize="616,143" sap2010:WorkflowViewState.IdRef="NGetText_9" ScopeIdentifier="8a28a032-af80-49db-845a-44b92de37582" TextString="[fdsRisk]" Version="V5">
+                    <uix:NGetText.Target>
+                      <uix:TargetAnchorable ContentHash="oeqoIXrnykKFD19trUmTxg" DesignTimeRectangle="455, 671, 315, 27" ElementType="Text" ElementVisibilityArgument="Interactive" FullSelectorArgument="&lt;webctrl id='crm-fds-risk' tag='DD' /&gt;" Guid="2d3c09bb-e327-4b1a-a62a-c96f8c209fe2" InformativeScreenshot="85e979ccea2967e4cff4212133a70686.jpg" Reference="F9ggLvmvHkGBkDPI03Dc3Q/QBDyZ3NsJkuPsp9pjr28GA" ScopeSelectorArgument="&lt;html app='chrome.exe' title='*FinGuard CRM*' url='http://127.0.0.1:5000/consultation*' /&gt;" SearchSteps="Selector" Version="V6" WaitForReadyArgument="Interactive" />
+                    </uix:NGetText.Target>
+                  </uix:NGetText>
+                  <uix:NGetText DisplayName="Get Text #crm-assigned-agent" HealingAgentBehavior="SameAsCard" sap:VirtualizedContainerService.HintSize="616,143" sap2010:WorkflowViewState.IdRef="NGetText_10" ScopeIdentifier="8a28a032-af80-49db-845a-44b92de37582" TextString="[assignedAgent]" Version="V5">
+                    <uix:NGetText.Target>
+                      <uix:TargetAnchorable ContentHash="Mp3F75EtfU-chayTDeMAng" DesignTimeRectangle="803, 671, 315, 27" ElementType="Text" ElementVisibilityArgument="Interactive" FullSelectorArgument="&lt;webctrl id='crm-assigned-agent' tag='DD' /&gt;" Guid="20761dae-e053-4844-af51-53e0b8bc2abf" InformativeScreenshot="edc325e3eed5bb211d6f902780bb0c45.jpg" Reference="F9ggLvmvHkGBkDPI03Dc3Q/9sMqhrhZgUiHEturLod88A" ScopeSelectorArgument="&lt;html app='chrome.exe' title='*FinGuard CRM*' url='http://127.0.0.1:5000/consultation*' /&gt;" SearchSteps="Selector" Version="V6" WaitForReadyArgument="Interactive" />
+                    </uix:NGetText.Target>
+                  </uix:NGetText>
+                  <uix:NGetText DisplayName="Get Text #crm-received-at" HealingAgentBehavior="SameAsCard" sap:VirtualizedContainerService.HintSize="616,134" sap2010:WorkflowViewState.IdRef="NGetText_11" ScopeIdentifier="8a28a032-af80-49db-845a-44b92de37582" TextString="[receivedAt]" Version="V5">
+                    <uix:NGetText.Target>
+                      <uix:TargetAnchorable ContentHash="GkS6oToPw0mMvRlepzXikw" DesignTimeRectangle="1151, 671, 316, 27" ElementType="Text" ElementVisibilityArgument="Interactive" FullSelectorArgument="&lt;webctrl id='crm-received-at' tag='DD' /&gt;" Guid="dd5a189a-b1ac-4f8a-9c45-d60339780894" InformativeScreenshot="ab28f17ec85e441165c8f46401a3272a.jpg" Reference="F9ggLvmvHkGBkDPI03Dc3Q/WV-aG64CZkKcOLTbtyYkPg" ScopeSelectorArgument="&lt;html app='chrome.exe' title='*FinGuard CRM*' url='http://127.0.0.1:5000/consultation*' /&gt;" SearchSteps="Selector" Version="V6" WaitForReadyArgument="Interactive" />
+                    </uix:NGetText.Target>
+                  </uix:NGetText>
+                </Sequence>
+              </uix:NCheckState.IfExists>
+              <uix:NCheckState.Target>
+                <uix:TargetAnchorable ContentHash="79iFlHMemEuuv__3-xmMnw" DesignTimeRectangle="1151, 279, 316, 27" ElementType="Text" ElementVisibilityArgument="Interactive" FullSelectorArgument="&lt;webctrl id='crm-incident-id' tag='DD' /&gt;" Guid="4ed7b695-4b92-483a-8a33-90cbbcba85ff" InformativeScreenshot="4d6abb23d88be6e3a8610fa5c5e56b2d.jpg" Reference="F9ggLvmvHkGBkDPI03Dc3Q/8QnRbF-OrkaT481kNwRJiw" ScopeSelectorArgument="&lt;html app='chrome.exe' title='*FinGuard CRM*' url='http://127.0.0.1:5000/consultation*' /&gt;" SearchSteps="Selector" Version="V6" WaitForReadyArgument="Interactive" />
+              </uix:NCheckState.Target>
+            </uix:NCheckState>
+            <If Condition="[Not String.IsNullOrWhiteSpace(incidentId) AndAlso System.String.Equals(incidentId.Trim(), in_IncidentId, System.StringComparison.Ordinal)]" DisplayName="현재 접수번호의 팝업만 열기" sap:VirtualizedContainerService.HintSize="652,338" sap2010:WorkflowViewState.IdRef="If_2">
+              <If.Then>
+                <uix:NClick ActivateBefore="True" ClickType="Single" DisplayName="Click #open-excel-form (Hardware Events)" HealingAgentBehavior="SameAsCard" sap:VirtualizedContainerService.HintSize="334,162" sap2010:WorkflowViewState.IdRef="NClick_1" InteractionMode="HardwareEvents" KeyModifiers="None" MouseButton="Left" ScopeIdentifier="8a28a032-af80-49db-845a-44b92de37582" Version="V5">
+                  <uix:NClick.Target>
+                    <uix:TargetAnchorable ContentHash="p-bcLrrS70qXI5h4uHm6_Q" DesignTimeRectangle="417, 769, 140, 38" ElementType="Button" ElementVisibilityArgument="Interactive" FullSelectorArgument="&lt;webctrl id='open-excel-form' tag='BUTTON' /&gt;" Guid="c2961179-d5a0-4112-a981-6e5243624412" InformativeScreenshot="5097d7d9a5ac9a54b63fc2095cc8a7e6.jpg" Reference="F9ggLvmvHkGBkDPI03Dc3Q/5-QBefPEkEC9g4cozLQCXw" ScopeSelectorArgument="&lt;html app='chrome.exe' title='*FinGuard CRM*' url='http://127.0.0.1:5000/consultation*' /&gt;" SearchSteps="Selector" Version="V6" WaitForReadyArgument="Interactive" />
+                  </uix:NClick.Target>
+                </uix:NClick>
+              </If.Then>
+            </If>
+          </Sequence>
+        </ActivityAction>
+      </uix:NApplicationCard.Body>
+      <uix:NApplicationCard.OCREngine>
+        <ActivityFunc x:TypeArguments="sd:Image, scg:IEnumerable(scg:KeyValuePair(sd1:Rectangle, x:String))">
+          <ActivityFunc.Argument>
+            <DelegateInArgument x:TypeArguments="sd:Image" Name="Image" />
+          </ActivityFunc.Argument>
+        </ActivityFunc>
+      </uix:NApplicationCard.OCREngine>
+      <uix:NApplicationCard.TargetApp>
+        <uix:TargetApp Area="-8, -8, 1936, 1056" BrowserType="Chrome" ContentHash="WeJmcsAGYkeP-QFHQPhhgw" InformativeScreenshot="ceb56002c6752e26f3c66634203d7292.jpg" Reference="F9ggLvmvHkGBkDPI03Dc3Q/VEh_ECPHIkG02u2guJkbwQ" Selector="&lt;html app='chrome.exe' title='*FinGuard CRM*' url='http://127.0.0.1:5000/consultation*' /&gt;" Url="[string.Format(&quot;http://127.0.0.1:5000/consultation/customer-reports/{0}&quot;, reportId)]" Version="V3">
+          <uix:TargetApp.SapInfo>
+            <uix:SAPElementInfo IsSapSubsystem="False" WebAutomationFramework="Default" />
+          </uix:TargetApp.SapInfo>
+        </uix:TargetApp>
+      </uix:NApplicationCard.TargetApp>
+    </uix:NApplicationCard>
+    <If Condition="[Not String.IsNullOrWhiteSpace(incidentId) AndAlso System.String.Equals(incidentId.Trim(), in_IncidentId, System.StringComparison.Ordinal)]" DisplayName="CRM 접수번호가 일치하면 엑셀 등록" sap:VirtualizedContainerService.HintSize="690,1310" sap2010:WorkflowViewState.IdRef="If_1">
+      <If.Then>
+        <uix:NApplicationCard AttachMode="ByInstance" CloseMode="Never" DisplayName="5001 엑셀 별도 팝업" HealingAgentBehavior="Job" sap:VirtualizedContainerService.HintSize="688,1134" sap2010:WorkflowViewState.IdRef="NApplicationCard_2" InteractionMode="DebuggerApi" OpenMode="Never" ScopeGuid="6ea99ad8-631f-4b76-8aca-ac38323a2995" Version="V2">
+          <uix:NApplicationCard.Body>
+            <ActivityAction x:TypeArguments="x:Object">
+              <ActivityAction.Argument>
+                <DelegateInArgument x:TypeArguments="x:Object" Name="WSSessionData" />
+              </ActivityAction.Argument>
+              <Sequence DisplayName="엑셀 화면에서 입력" sap:VirtualizedContainerService.HintSize="686,962" sap2010:WorkflowViewState.IdRef="Sequence_6">
+                <sap:WorkflowViewStateService.ViewState>
+                  <scg:Dictionary x:TypeArguments="x:String, x:Object">
+                    <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+                  </scg:Dictionary>
+                </sap:WorkflowViewStateService.ViewState>
+                <ui:LogMessage DisplayName="엑셀 입력 시작 기록" Level="Info" Message="[&quot;Excel 팝업에서 고객명 입력란을 기다립니다.&quot;]" />
+                <uix:NTypeInto ActivateBefore="True" ClickBeforeMode="Single" DisplayName="Type Into #excel-customer-name" EmptyFieldMode="SingleLine" HealingAgentBehavior="SameAsCard" sap:VirtualizedContainerService.HintSize="616,246" sap2010:WorkflowViewState.IdRef="NTypeInto_1" ScopeIdentifier="6ea99ad8-631f-4b76-8aca-ac38323a2995" Text="[customerName.Replace(&quot;[&quot;, &quot;[[&quot;)]" Version="V5">
+                  <uix:NTypeInto.Target>
+                    <uix:TargetAnchorable ContentHash="uzG1lMo5gE2PFAiWKllBaQ" DesignTimeRectangle="430, 317, 337, 45" ElementType="InputBox" ElementVisibilityArgument="Interactive" FullSelectorArgument="&lt;webctrl id='excel-customer-name' tag='INPUT' /&gt;" Guid="9cc574b3-3822-4943-823e-0d3cdfa144ab" InformativeScreenshot="d3b7f89d4d3bda98718a5ee33c44ac07.jpg" Reference="F9ggLvmvHkGBkDPI03Dc3Q/m2AYuNkzjESYj8_pvfpQBQ" ScopeSelectorArgument="&lt;html app='chrome.exe' title='FinGuard 엑셀 접수' url='http://127.0.0.1:5001/*' /&gt;" SearchSteps="Selector" Version="V6" WaitForReadyArgument="Interactive" />
+                  </uix:NTypeInto.Target>
+                </uix:NTypeInto>
+                <uix:NTypeInto ActivateBefore="True" ClickBeforeMode="Single" DisplayName="Type Into #excel-report-id" EmptyFieldMode="SingleLine" HealingAgentBehavior="SameAsCard" sap2010:WorkflowViewState.IdRef="NTypeInto_2" Text="[reportId.Replace(&quot;[&quot;, &quot;[[&quot;)]" Version="V5">
+                  <uix:NTypeInto.Target>
+                    <uix:TargetAnchorable ContentHash="5nV_Rg-elkW_kVt5rc9oIg" DesignTimeRectangle="783, 317, 337, 45" ElementType="InputBox" ElementVisibilityArgument="Interactive" FullSelectorArgument="&lt;webctrl id='excel-report-id' tag='INPUT' /&gt;" Guid="c5e16b7e-b342-4d30-b989-0430dbcccaf5" InformativeScreenshot="721e4e5f4f91d730103d01174abc81c6.jpg" Reference="F9ggLvmvHkGBkDPI03Dc3Q/THuKAHGvI0GeBfK11Nx3_A" ScopeSelectorArgument="&lt;html app='chrome.exe' title='FinGuard 엑셀 접수' url='http://127.0.0.1:5001/*' /&gt;" SearchSteps="Selector" Version="V6" WaitForReadyArgument="Interactive" />
+                  </uix:NTypeInto.Target>
+                </uix:NTypeInto>
+                <uix:NTypeInto ActivateBefore="True" ClickBeforeMode="Single" DisplayName="Type Into #excel-incident-id" EmptyFieldMode="SingleLine" HealingAgentBehavior="SameAsCard" sap2010:WorkflowViewState.IdRef="NTypeInto_3" Text="[incidentId.Replace(&quot;[&quot;, &quot;[[&quot;)]" Version="V5">
+                  <uix:NTypeInto.Target>
+                    <uix:TargetAnchorable ContentHash="tuEVlXoMJketLlKsgsi0-A" DesignTimeRectangle="430, 422, 337, 45" ElementType="InputBox" ElementVisibilityArgument="Interactive" FullSelectorArgument="&lt;webctrl id='excel-incident-id' tag='INPUT' /&gt;" Guid="7aacf81d-c640-4c55-b521-4c2aac274fe2" InformativeScreenshot="725c2594e0d1aac75bad5c245ddbe0a5.jpg" Reference="F9ggLvmvHkGBkDPI03Dc3Q/ysihUKbgNU2sGOPAWmIoGQ" ScopeSelectorArgument="&lt;html app='chrome.exe' title='FinGuard 엑셀 접수' url='http://127.0.0.1:5001/*' /&gt;" SearchSteps="Selector" Version="V6" WaitForReadyArgument="Interactive" />
+                  </uix:NTypeInto.Target>
+                </uix:NTypeInto>
+                <uix:NTypeInto ActivateBefore="True" ClickBeforeMode="Single" DisplayName="Type Into #excel-damage-type" EmptyFieldMode="SingleLine" HealingAgentBehavior="SameAsCard" sap2010:WorkflowViewState.IdRef="NTypeInto_4" Text="[damageType.Replace(&quot;[&quot;, &quot;[[&quot;)]" Version="V5">
+                  <uix:NTypeInto.Target>
+                    <uix:TargetAnchorable ContentHash="eNecJjibjU6NoeXIJwlMpQ" DesignTimeRectangle="783, 422, 337, 45" ElementType="InputBox" ElementVisibilityArgument="Interactive" FullSelectorArgument="&lt;webctrl id='excel-damage-type' tag='INPUT' /&gt;" Guid="6b007485-c3ed-45c4-b5e5-c9079f780503" InformativeScreenshot="5b1993f4027c3d2f2afecb742deadb3a.jpg" Reference="F9ggLvmvHkGBkDPI03Dc3Q/4n12L3dKoUGktIpi4oJ2GQ" ScopeSelectorArgument="&lt;html app='chrome.exe' title='FinGuard 엑셀 접수' url='http://127.0.0.1:5001/*' /&gt;" SearchSteps="Selector" Version="V6" WaitForReadyArgument="Interactive" />
+                  </uix:NTypeInto.Target>
+                </uix:NTypeInto>
+                <uix:NTypeInto ActivateBefore="True" ClickBeforeMode="Single" DisplayName="Type Into #excel-damage-amount" EmptyFieldMode="SingleLine" HealingAgentBehavior="SameAsCard" sap2010:WorkflowViewState.IdRef="NTypeInto_5" Text="[damageAmount.Replace(&quot;[&quot;, &quot;[[&quot;)]" Version="V5">
+                  <uix:NTypeInto.Target>
+                    <uix:TargetAnchorable ContentHash="ZY5XqjCN-0WOVDrpTQUnQw" DesignTimeRectangle="430, 527, 337, 45" ElementType="InputBox" ElementVisibilityArgument="Interactive" FullSelectorArgument="&lt;webctrl id='excel-damage-amount' tag='INPUT' /&gt;" Guid="820321ef-8678-4422-bcc4-dc0921cf6d30" InformativeScreenshot="195508f240c967e7d49523402ad4e779.jpg" Reference="F9ggLvmvHkGBkDPI03Dc3Q/w9yQn4--YUu9sLxx75cU4Q" ScopeSelectorArgument="&lt;html app='chrome.exe' title='FinGuard 엑셀 접수' url='http://127.0.0.1:5001/*' /&gt;" SearchSteps="Selector" Version="V6" WaitForReadyArgument="Interactive" />
+                  </uix:NTypeInto.Target>
+                </uix:NTypeInto>
+                <uix:NTypeInto ActivateBefore="True" ClickBeforeMode="Single" DisplayName="Type Into #excel-occurred-at" EmptyFieldMode="SingleLine" HealingAgentBehavior="SameAsCard" sap2010:WorkflowViewState.IdRef="NTypeInto_6" Text="[occurredAt.Replace(&quot;[&quot;, &quot;[[&quot;)]" Version="V5">
+                  <uix:NTypeInto.Target>
+                    <uix:TargetAnchorable ContentHash="tINL5gN3hk-t8iulJ-qmFw" DesignTimeRectangle="783, 527, 337, 45" ElementType="InputBox" ElementVisibilityArgument="Interactive" FullSelectorArgument="&lt;webctrl id='excel-occurred-at' tag='INPUT' /&gt;" Guid="33c7b30a-93cc-4d9d-8241-a2e91a67cfdc" InformativeScreenshot="b6e076e111392b28ee4af9f57a031be5.jpg" Reference="F9ggLvmvHkGBkDPI03Dc3Q/J268qPy06Emm0g43yP7_cQ" ScopeSelectorArgument="&lt;html app='chrome.exe' title='FinGuard 엑셀 접수' url='http://127.0.0.1:5001/*' /&gt;" SearchSteps="Selector" Version="V6" WaitForReadyArgument="Interactive" />
+                  </uix:NTypeInto.Target>
+                </uix:NTypeInto>
+                <uix:NTypeInto ActivateBefore="True" ClickBeforeMode="Single" DisplayName="Type Into #excel-conversation" EmptyFieldMode="SingleLine" HealingAgentBehavior="SameAsCard" sap2010:WorkflowViewState.IdRef="NTypeInto_7" Text="[conversation.Replace(&quot;[&quot;, &quot;[[&quot;)]" Version="V5">
+                  <uix:NTypeInto.Target>
+                    <uix:TargetAnchorable ContentHash="48vCbltxVkWjT6lReVp3DQ" DesignTimeRectangle="430, 632, 690, 150" ElementType="InputBox" ElementVisibilityArgument="Interactive" FullSelectorArgument="&lt;webctrl id='excel-conversation' tag='TEXTAREA' /&gt;" Guid="609ac854-0eb4-40c4-8f5a-94963e3cea45" InformativeScreenshot="00ff08cb0477cf465622a2c7b5b7bd76.jpg" Reference="F9ggLvmvHkGBkDPI03Dc3Q/45KtI81AQECN1wZiNRArRg" ScopeSelectorArgument="&lt;html app='chrome.exe' title='FinGuard 엑셀 접수' url='http://127.0.0.1:5001/*' /&gt;" SearchSteps="Selector" Version="V6" WaitForReadyArgument="Interactive" />
+                  </uix:NTypeInto.Target>
+                </uix:NTypeInto>
+                <uix:NTypeInto ActivateBefore="True" ClickBeforeMode="Single" DisplayName="Type Into #excel-ai-summary" EmptyFieldMode="SingleLine" HealingAgentBehavior="SameAsCard" sap2010:WorkflowViewState.IdRef="NTypeInto_8" Text="[aiSummary.Replace(&quot;[&quot;, &quot;[[&quot;)]" Version="V5">
+                  <uix:NTypeInto.Target>
+                    <uix:TargetAnchorable ContentHash="1jigIpAHt0uoMQYT7KQVmg" DesignTimeRectangle="430, 846, 690, 150" ElementType="InputBox" ElementVisibilityArgument="Interactive" FullSelectorArgument="&lt;webctrl id='excel-ai-summary' tag='TEXTAREA' /&gt;" Guid="82fc6c88-b7c6-4fcc-be54-905dee420993" InformativeScreenshot="373c72dbf5bd2b9d6be0126d31558039.jpg" Reference="F9ggLvmvHkGBkDPI03Dc3Q/fkg5gR_gkkqqeog8_kIIPQ" ScopeSelectorArgument="&lt;html app='chrome.exe' title='FinGuard 엑셀 접수' url='http://127.0.0.1:5001/*' /&gt;" SearchSteps="Selector" Version="V6" WaitForReadyArgument="Interactive" />
+                  </uix:NTypeInto.Target>
+                </uix:NTypeInto>
+                <uix:NTypeInto ActivateBefore="True" ClickBeforeMode="Single" DisplayName="Type Into #excel-fds-risk" EmptyFieldMode="SingleLine" HealingAgentBehavior="SameAsCard" sap2010:WorkflowViewState.IdRef="NTypeInto_9" Text="[fdsRisk.Replace(&quot;[&quot;, &quot;[[&quot;)]" Version="V5">
+                  <uix:NTypeInto.Target>
+                    <uix:TargetAnchorable ContentHash="VhrBVENgBUWThVM0V8QWnQ" DesignTimeRectangle="430, 1060, 337, 45" ElementType="InputBox" ElementVisibilityArgument="Interactive" FullSelectorArgument="&lt;webctrl id='excel-fds-risk' tag='INPUT' /&gt;" Guid="4d57984c-6af1-47f2-81d1-57b27ece5a0d" InformativeScreenshot="aae21bfd71c778ae5be61824dd808a76.jpg" Reference="F9ggLvmvHkGBkDPI03Dc3Q/LWGMh6EF20a0520izOGyVw" ScopeSelectorArgument="&lt;html app='chrome.exe' title='FinGuard 엑셀 접수' url='http://127.0.0.1:5001/*' /&gt;" SearchSteps="Selector" Version="V6" WaitForReadyArgument="Interactive" />
+                  </uix:NTypeInto.Target>
+                </uix:NTypeInto>
+                <uix:NTypeInto ActivateBefore="True" ClickBeforeMode="Single" DisplayName="Type Into #excel-assigned-agent" EmptyFieldMode="SingleLine" HealingAgentBehavior="SameAsCard" sap2010:WorkflowViewState.IdRef="NTypeInto_10" Text="[assignedAgent.Replace(&quot;[&quot;, &quot;[[&quot;)]" Version="V5">
+                  <uix:NTypeInto.Target>
+                    <uix:TargetAnchorable ContentHash="yB_MgP-9EUKt-cSdYiQnDQ" DesignTimeRectangle="783, 1060, 337, 45" ElementType="InputBox" ElementVisibilityArgument="Interactive" FullSelectorArgument="&lt;webctrl id='excel-assigned-agent' tag='INPUT' /&gt;" Guid="f982547c-bde8-491e-88ec-29ba9848cf36" InformativeScreenshot="b7f45d174817db9970a1affae60731db.jpg" Reference="F9ggLvmvHkGBkDPI03Dc3Q/058SOzGRV0SAcpoDlQ5seA" ScopeSelectorArgument="&lt;html app='chrome.exe' title='FinGuard 엑셀 접수' url='http://127.0.0.1:5001/*' /&gt;" SearchSteps="Selector" Version="V6" WaitForReadyArgument="Interactive" />
+                  </uix:NTypeInto.Target>
+                </uix:NTypeInto>
+                <uix:NTypeInto ActivateBefore="True" ClickBeforeMode="Single" DisplayName="Type Into #excel-received-at" EmptyFieldMode="SingleLine" HealingAgentBehavior="SameAsCard" sap2010:WorkflowViewState.IdRef="NTypeInto_11" Text="[receivedAt.Replace(&quot;[&quot;, &quot;[[&quot;)]" Version="V5">
+                  <uix:NTypeInto.Target>
+                    <uix:TargetAnchorable ContentHash="-RVJ3FZGOEqY5QUhI7ExAA" DesignTimeRectangle="430, 1165, 337, 45" ElementType="InputBox" ElementVisibilityArgument="Interactive" FullSelectorArgument="&lt;webctrl id='excel-intake-form' tag='FORM' /&gt;&lt;webctrl id='excel-received-at' tag='INPUT' /&gt;" Guid="b546ba59-bfa7-4156-bd26-eb15dd735f08" InformativeScreenshot="504cbdfafd61b2b408cc1384206dc1ea.jpg" Reference="F9ggLvmvHkGBkDPI03Dc3Q/Jy_3cKJtK0ynOE5V8yvX0Q" ScopeSelectorArgument="&lt;html app='chrome.exe' title='FinGuard 엑셀 접수' url='http://127.0.0.1:5001/*' /&gt;" SearchSteps="Selector" Version="V6" WaitForReadyArgument="Interactive" />
+                  </uix:NTypeInto.Target>
+                </uix:NTypeInto>
+                <Assign DisplayName="상담사 검토를 위해 입력 완료" sap2010:WorkflowViewState.IdRef="Assign_2">
+                  <Assign.To>
+                    <OutArgument x:TypeArguments="x:Boolean">[out_ExcelPrepared]</OutArgument>
+                  </Assign.To>
+                  <Assign.Value>
+                    <InArgument x:TypeArguments="x:Boolean">[True]</InArgument>
+                  </Assign.Value>
+                </Assign>
+                <ui:LogMessage DisplayName="엑셀 입력 완료 기록" Level="Info" Message="[&quot;Excel 폼 입력이 완료되었습니다. 상담사 제출을 기다립니다.&quot;]" />
+              </Sequence>
+            </ActivityAction>
+          </uix:NApplicationCard.Body>
+          <uix:NApplicationCard.OCREngine>
+            <ActivityFunc x:TypeArguments="sd:Image, scg:IEnumerable(scg:KeyValuePair(sd1:Rectangle, x:String))">
+              <ActivityFunc.Argument>
+                <DelegateInArgument x:TypeArguments="sd:Image" Name="Image" />
+              </ActivityFunc.Argument>
+            </ActivityFunc>
+          </uix:NApplicationCard.OCREngine>
+          <uix:NApplicationCard.TargetApp>
+            <uix:TargetApp Area="0, 0, 1136, 923" BrowserType="Chrome" ContentHash="d5kKnIgBUkSpmZSJvhtWkQ" InformativeScreenshot="b35da6c5e9f0ad855ac3aac5d29f6eb1.jpg" Reference="F9ggLvmvHkGBkDPI03Dc3Q/4mOUS3liiESa6oj0wjM1UA" Selector="&lt;html app='chrome.exe' htmlwindowname='finguardExcel*' title='FinGuard 엑셀 접수' url='http://127.0.0.1:5001/*' /&gt;" Url="http://127.0.0.1:5001/records" Version="V3">
+              <uix:TargetApp.SapInfo>
+                <uix:SAPElementInfo IsSapSubsystem="False" WebAutomationFramework="Default" />
+              </uix:TargetApp.SapInfo>
+            </uix:TargetApp>
+          </uix:NApplicationCard.TargetApp>
+        </uix:NApplicationCard>
+      </If.Then>
+    </If>
+  </Sequence>
+</Activity>

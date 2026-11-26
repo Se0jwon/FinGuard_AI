@@ -1,0 +1,14 @@
+﻿{
+  "Name": "Excel Intake Popup",
+  "Description": "Port 5001 Excel intake browser",
+  "Type": "Screen",
+  "Id": "odZxPJWIckaisgJ8eFF3dw",
+  "Reference": "F9ggLvmvHkGBkDPI03Dc3Q/odZxPJWIckaisgJ8eFF3dw",
+  "ParentRef": "F9ggLvmvHkGBkDPI03Dc3Q/mxvFYddxQE2v7x-3BdT8WQ",
+  "Created": "2026-11-26T03:27:08.6917842Z",
+  "Updated": "2026-11-26T03:27:08.6917842Z",
+  "CreatedBy": [
+    "UiPath.UIAutomationCore, Version=26.10.7.0, Culture=neutral, PublicKeyToken=null",
+    "UiPath.Platform, Version=26.4.0.0, Culture=neutral, PublicKeyToken=null"
+  ]
+}

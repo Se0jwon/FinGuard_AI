@@ -3,6 +3,7 @@
 {% block styles %}
 <link rel="stylesheet" href="{{ url_for('static', filename='portal.css') }}">
 {% if view in ('advice', 'report') %}<script defer src="{{ url_for('static', filename='voice-input.js') }}"></script>{% endif %}
+{% if staff_view and view == 'detail' %}<script defer src="{{ url_for('static', filename='excel-popup.js') }}"></script>{% endif %}
 {% endblock %}
 {% block body_class %}{% if request.blueprint == 'report_staff' %}crm{% else %}portal{% endif %}{% endblock %}
 {% macro csrf() %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endmacro %}
@@ -19,7 +20,7 @@
   <div class="portal-header-inner">
     <a class="portal-brand" href="{{ url_for('index') }}">
       <img src="{{ url_for('favicon') }}" alt="" width="36" height="36">
-      <span>FinGuard<small>고객 서비스</small></span>
+      <span>FinGuard</span>
     </a>
     <nav class="portal-nav" aria-label="고객 서비스">
       {% for endpoint, label in [('customer.report', '피해 신고'), ('customer.advice', 'AI 상담'), ('customer.history', '내 신고 내역')] %}
@@ -27,6 +28,7 @@
       {% endfor %}
     </nav>
     <div class="portal-account">
+      <strong class="site-context-tag">기업 내부 사이트</strong>
       {% if g.customer_account %}
       <form method="post" action="{{ url_for('customer.logout') }}">{{ csrf() }}<button class="portal-link-button">로그아웃</button></form>
       {% else %}
@@ -94,7 +96,7 @@
       <select id="kind" name="kind" required>
         {% for key, label in kinds.items() %}<option value="{{ key }}">{{ label }}</option>{% endfor %}
       </select>
-      <label for="occurred_at">피해 발생 시각 (한국 시간, 선택)</label><input id="occurred_at" name="occurred_at" type="datetime-local">
+      <label for="occurred_at">피해 발생 시각 (선택)</label><input id="occurred_at" name="occurred_at" type="datetime-local">
       <label for="amount">신고 피해 금액 (원, 선택)</label><input id="amount" name="amount" type="number" min="0" max="999999999999">
       {% endif %}
       <label for="conversation">{{ '상세 신고 내용' if view == 'report' else '상담 내용' }}</label>
@@ -117,7 +119,7 @@
     <a href="{{ url_for('customer.advice') }}">새 AI 상담</a>
   {% elif view == 'list' %}
     {% if not staff_view %}<h2>피해 신고</h2>{% endif %}
-    <div class="crm-table-scroll"><table class="crm-queue"><thead><tr><th>신고번호</th><th>피해 유형</th>{% if staff_view %}<th>신고 시각 (한국 시간)</th>{% endif %}<th>진행 상태</th>
+    <div class="crm-table-scroll"><table class="crm-queue"><thead><tr><th>신고번호</th><th>피해 유형</th>{% if staff_view %}<th>신고 시각</th>{% endif %}<th>진행 상태</th>
     {% if staff_view %}<th>담당 상담원</th>{% endif %}</tr></thead><tbody>
     {% for row in rows %}
     <tr><td><a href="{{ url_for('report_staff.review' if staff_view else 'customer.detail', report_id=row.report_id) }}">{{ row.report_id }}</a></td>
@@ -144,8 +146,8 @@
       {% if not staff_view %}<div><dt>진행 상태</dt><dd>{{ status(row) }}</dd></div>{% endif %}
       {% if staff_view %}<div><dt>고객 계정</dt><dd>{{ row.customer_username }} · {{ row.customer_id }}</dd></div><div><dt>담당 상담원</dt><dd>{{ row.assigned_to or '미배정' }}</dd></div>{% endif %}
       <div><dt>피해 유형</dt><dd>{{ kinds[row.kind] }}</dd></div>
-      {% if staff_view %}<div><dt>신고 시각 (한국 시간)</dt><dd>{{ row.created_at | korean_time }}</dd></div>{% endif %}
-      <div><dt>피해 발생 시각 (한국 시간)</dt><dd>{{ row.occurred_at | replace('T', ' ') if row.occurred_at else '미입력' }}</dd></div>
+      {% if staff_view %}<div><dt>신고 시각</dt><dd>{{ row.created_at | korean_time }}</dd></div>{% endif %}
+      <div><dt>피해 발생 시각</dt><dd>{{ row.occurred_at | replace('T', ' ') if row.occurred_at else '미입력' }}</dd></div>
       <div><dt>신고 피해 금액</dt><dd>{{ ("{:,}".format(row.amount) + '원') if row.amount is not none else '미입력' }}</dd></div>
       <div class="crm-report-description"><dt>상세 신고 내용</dt><dd>{{ row.conversation }}</dd></div>
       {% if row.status == 'SUCCEEDED' and row.incident_id %}<div><dt>CRM 사고 접수번호</dt><dd>{{ row.incident_id }}</dd></div>{% endif %}
@@ -226,17 +228,31 @@
       {{ csrf() }}<label for="more">추가 정보</label><textarea id="more" name="note" required maxlength="2000"></textarea><button>추가 정보 제출</button>
     </form>
     {% endif %}
-    {% if staff_view and excel_enabled %}
-    {% if can_review and row.job_state == 'Successful' and row.error_message == 'CRM_REJECTED' %}
-    <form method="post" action="{{ url_for('report_staff.prepare_excel', report_id=row.report_id) }}">
-      {{ csrf() }}<button>기존 접수로 엑셀 폼 준비</button>
+    {% if staff_view %}
+    {% if receipt %}
+    <section class="crm-section" id="crm-receipt">
+      <h2>CRM 사고 접수 완료</h2>
+      <dl class="crm-report-facts">
+        <div><dt>고객명</dt><dd id="crm-customer-name">{{ receipt.name }}</dd></div>
+        <div><dt>고객 신고번호</dt><dd id="crm-report-id">{{ row.report_id }}</dd></div>
+        <div><dt>사고 접수번호</dt><dd id="crm-incident-id">{{ receipt.incident_id }}</dd></div>
+        <div><dt>금융 피해 유형</dt><dd id="crm-damage-type">{{ kinds[row.kind] }}</dd></div>
+        <div><dt>피해 금액</dt><dd id="crm-damage-amount">{{ row.amount if row.amount is not none else '미입력' }}</dd></div>
+        <div><dt>피해 발생 시각</dt><dd id="crm-occurred-at">{{ row.occurred_at | replace('T', ' ') if row.occurred_at else '미입력' }}</dd></div>
+        <div class="crm-report-description"><dt>상담 내용</dt><dd id="crm-conversation">{{ row.conversation }}</dd></div>
+        <div class="crm-report-description"><dt>AI 상담 요약</dt><dd id="crm-ai-summary">{{ snapshot.ai_result.summary | default('미분석', true) if snapshot.ai_result else '미분석' }}</dd></div>
+        <div><dt>FDS 위험도</dt><dd id="crm-fds-risk">{{ risks.get(snapshot.fds_result.risk_level, '미분류') if snapshot.fds_result.transaction_id else '미분석' }}</dd></div>
+        <div><dt>담당 상담원</dt><dd id="crm-assigned-agent">{{ row.assigned_to or '미배정' }}</dd></div>
+        <div><dt>CRM 접수 시각</dt><dd id="crm-received-at">{{ receipt.created_at }}</dd></div>
+      </dl>
+    </section>
+    {% endif %}
+    <form id="open-excel-window" method="post" action="{{ url_for('report_staff.open_excel') }}">
+      {{ csrf() }}<button id="open-excel-form" type="submit">엑셀 접수 폼 열기</button>
+      <p id="excel-popup-status" role="status" hidden></p>
     </form>
     {% endif %}
-    <button type="button" id="open-excel-draft">엑셀 접수 폼 열기</button>
-    <p role="status" data-excel-ready="{{ url_for('report_staff.excel_ready', report_id=row.report_id) }}"{% if request.args.get('open_excel') == '1' %} data-auto-open{% endif %}></p>
-    <script src="{{ url_for('static', filename='excel-redirect.js') }}" defer></script>
-    {% endif %}
-    {% if staff_view %}<section class="crm-section crm-history"><h2>처리 이력 <small>(한국 시간)</small></h2>
+    {% if staff_view %}<section class="crm-section crm-history"><h2>처리 이력</h2>
     {% set labels = {'FILED':'신고 등록','ASSIGNED':'담당 배정','SUPPLEMENTED':'검토 보완','INFORMATION_REQUESTED':'추가 정보 요청','INFORMATION_PROVIDED':'추가 정보 제출','APPROVED':'승인','REJECTED':'반려'} %}
     <ul>{% for event in events %}<li>{{ event.created_at | korean_time }} · {{ labels[event.action] }}{% if event.note %} · {{ event.note }}{% endif %}</li>
     {% else %}<li>표시할 추가 처리 이력이 없습니다.</li>{% endfor %}</ul></section>{% endif %}

@@ -112,7 +112,7 @@ function showAutomationState(state) {
   };
   automationStatus.textContent = state.request_id + " · " + (labels[state.status] || state.status);
   document.getElementById("automation-decision").textContent = state.decision_by
-    ? "처리자 " + state.decision_by + " · " + koreanTime.format(new Date(state.decision_at.replace(" ", "T") + "Z")) + " (한국 시간)" : "";
+    ? "처리자 " + state.decision_by + " · " + koreanTime.format(new Date(state.decision_at.replace(" ", "T") + "Z")) : "";
   const ready = state.status === "PENDING_APPROVAL" && canDecide;
   document.getElementById("approve-btn").disabled = !ready;
   if (rejectBtn) rejectBtn.disabled = !ready;

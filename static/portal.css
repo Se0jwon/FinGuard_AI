@@ -58,6 +58,15 @@
 }
 
 .portal-account { margin-left: auto; }
+.portal .site-context-tag {
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #e7f3ef;
+  color: #075e59;
+  font-size: 16px;
+  font-weight: 800;
+  white-space: nowrap;
+}
 .portal .portal-nav a, .portal .portal-account a, .portal .portal-link-button {
   padding: 9px 12px;
   border-radius: 8px;
